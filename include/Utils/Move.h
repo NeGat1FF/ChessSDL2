@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <utility>
-#include "Square.h"
+#include "Board/Square.h"
 #include "Pieces/Piece.h"
 
 struct Move{

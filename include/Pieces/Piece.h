@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "Utils\Position.h"
+
 class Square;
 class Board;
 
@@ -33,7 +35,7 @@ public:
 
     std::string ToString() const;
 
-    virtual std::vector<std::shared_ptr<Square>> GetMoves(int x, int y, Board& board) const = 0;
+    virtual std::vector<std::shared_ptr<Square>> GetMoves(Position pos, Board& board) const = 0;
 
     void Move();
     bool HasMoved() const;

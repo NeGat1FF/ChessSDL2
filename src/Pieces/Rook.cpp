@@ -4,20 +4,20 @@
 
 Rook::Rook(Color color) : Piece(Type::Rook, color) {}
 
-std::vector<std::shared_ptr<Square>> Rook::GetMoves(int x, int y, Board &board) const
+std::vector<std::shared_ptr<Square>> Rook::GetMoves(Position pos, Board &board) const
 {
-    return GetRookMoves(x, y, board, GetColor());
+    return GetRookMoves(pos, board, GetColor());
 }
 
-std::vector<std::shared_ptr<Square>> Rook::GetRookMoves(int x, int y, Board& board, Color color){
+std::vector<std::shared_ptr<Square>> Rook::GetRookMoves(Position pos, Board& board, Color color){
     std::vector<std::shared_ptr<Square>> moves;
 
     int dx[] = {1, -1, 0, 0};
     int dy[] = {0, 0, 1, -1};
 
     for (int direction = 0; direction < 4; ++direction) {
-        int newX = x + dx[direction];
-        int newY = y + dy[direction];
+        int newX = pos.x + dx[direction];
+        int newY = pos.y + dy[direction];
 
         while (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
             auto square = board.GetSquare(newX, newY);

@@ -4,14 +4,14 @@
 
 King::King(Color color) : Piece(Type::King, color) {}
 
-std::vector<std::shared_ptr<Square>> King::GetMoves(int x, int y, Board &board) const {
+std::vector<std::shared_ptr<Square>> King::GetMoves(Position pos, Board &board) const {
     std::vector<std::shared_ptr<Square>> moves;
     int dx[] = {-1, -1, -1, 0, 1, 1, 1, 0};
     int dy[] = {-1, 0, 1, 1, 1, 0, -1, -1};
 
     for (int i = 0; i < 8; ++i) {
-        int newX = x + dx[i];
-        int newY = y + dy[i];
+        int newX = pos.x + dx[i];
+        int newY = pos.y + dy[i];
 
         if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
             auto nextSquare = board.GetSquare(newX, newY);

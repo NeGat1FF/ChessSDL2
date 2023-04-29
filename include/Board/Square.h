@@ -3,13 +3,9 @@
 #include "SDL2/SDL_render.h"
 #include "Pieces/Piece.h"
 #include "TextureManager/TextureManager.h"
+#include "Utils/Position.h"
 
 #define SQUARE_SIZE 45
-
-struct Position{
-    int x;
-    int y;
-};
 
 class Square
 {

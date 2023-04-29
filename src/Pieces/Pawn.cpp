@@ -6,33 +6,33 @@
 
 Pawn::Pawn(Color color) : Piece(Type::Pawn, color) {}
 
-std::vector<std::shared_ptr<Square>> Pawn::GetMoves(int x, int y, Board &board) const
+std::vector<std::shared_ptr<Square>> Pawn::GetMoves(Position pos, Board &board) const
 {
     std::vector<std::shared_ptr<Square>> moves;
     auto lastMove = board.GetLastMove();
     auto lastMovePiece = lastMove._piece;
     if (GetColor() == Color::White)
     {
-        auto nextSquare = board.GetSquare(x, y - 1);
+        auto nextSquare = board.GetSquare(pos.x, pos.y - 1);
         if (nextSquare && !nextSquare->GetPiece())
         {
             moves.push_back(nextSquare);
         }
         if (!HasMoved())
         {
-            nextSquare = board.GetSquare(x, y - 2);
+            nextSquare = board.GetSquare(pos.x, pos.y - 2);
             if (nextSquare && !nextSquare->GetPiece())
             {
                 moves.push_back(nextSquare);
             }
         }
 
-        nextSquare = board.GetSquare(x - 1, y - 1);
+        nextSquare = board.GetSquare(pos.x - 1, pos.y - 1);
         if (nextSquare && nextSquare->GetPiece() && nextSquare->GetPiece()->GetColor() != GetColor())
         {
             moves.push_back(nextSquare);
         }
-        nextSquare = board.GetSquare(x + 1, y - 1);
+        nextSquare = board.GetSquare(pos.x + 1, pos.y - 1);
         if (nextSquare && nextSquare->GetPiece() && nextSquare->GetPiece()->GetColor() != GetColor())
         {
             moves.push_back(nextSquare);
@@ -46,41 +46,41 @@ std::vector<std::shared_ptr<Square>> Pawn::GetMoves(int x, int y, Board &board) 
             Position lastMoveFrom = lastMove._from;
             
 
-            if (lastMoveTo.y == y && lastMoveFrom.y == y - 2)
+            if (lastMoveTo.y == pos.y && lastMoveFrom.y == pos.y - 2)
             {
-                if (lastMoveTo.x == x - 1)
+                if (lastMoveTo.x == pos.x - 1)
                 {
-                    moves.push_back(board.GetSquare(x - 1, y - 1));
+                    moves.push_back(board.GetSquare(pos.x - 1, pos.y - 1));
                 }
-                if (lastMoveTo.x == x + 1)
+                if (lastMoveTo.x == pos.x + 1)
                 {
-                    moves.push_back(board.GetSquare(x + 1, y - 1));
+                    moves.push_back(board.GetSquare(pos.x + 1, pos.y - 1));
                 }
             }
         }
     }
     else
     {
-        auto nextSquare = board.GetSquare(x, y + 1);
+        auto nextSquare = board.GetSquare(pos.x, pos.y + 1);
         if (nextSquare && !nextSquare->GetPiece())
         {
             moves.push_back(nextSquare);
         }
         if (!HasMoved())
         {
-            nextSquare = board.GetSquare(x, y + 2);
+            nextSquare = board.GetSquare(pos.x, pos.y + 2);
             if (nextSquare && !nextSquare->GetPiece())
             {
                 moves.push_back(nextSquare);
             }
         }
 
-        nextSquare = board.GetSquare(x - 1, y + 1);
+        nextSquare = board.GetSquare(pos.x - 1, pos.y + 1);
         if (nextSquare && nextSquare->GetPiece() && nextSquare->GetPiece()->GetColor() != GetColor())
         {
             moves.push_back(nextSquare);
         }
-        nextSquare = board.GetSquare(x + 1, y + 1);
+        nextSquare = board.GetSquare(pos.x + 1, pos.y + 1);
         if (nextSquare && nextSquare->GetPiece() && nextSquare->GetPiece()->GetColor() != GetColor())
         {
             moves.push_back(nextSquare);
@@ -92,15 +92,15 @@ std::vector<std::shared_ptr<Square>> Pawn::GetMoves(int x, int y, Board &board) 
             Position lastMoveTo = lastMove._to;
             Position lastMoveFrom = lastMove._from;
 
-            if (lastMoveTo.y == y && lastMoveFrom.y == y - 2)
+            if (lastMoveTo.y == pos.y && lastMoveFrom.y == pos.y - 2)
             {
-                if (lastMoveTo.x == x - 1)
+                if (lastMoveTo.x == pos.x - 1)
                 {
-                    moves.push_back(board.GetSquare(x - 1, y - 1));
+                    moves.push_back(board.GetSquare(pos.x - 1, pos.y - 1));
                 }
-                if (lastMoveTo.x == x + 1)
+                if (lastMoveTo.x == pos.x + 1)
                 {
-                    moves.push_back(board.GetSquare(x + 1, y - 1));
+                    moves.push_back(board.GetSquare(pos.x + 1, pos.y - 1));
                 }
             }
         }

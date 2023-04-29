@@ -7,12 +7,12 @@
 
 Queen::Queen(Color color) : Piece(Type::Queen, color) {}
 
-std::vector<std::shared_ptr<Square>> Queen::GetMoves(int x, int y, Board &board) const
+std::vector<std::shared_ptr<Square>> Queen::GetMoves(Position pos, Board &board) const
 {
     std::vector<std::shared_ptr<Square>> moves;
 
-    auto bishopMoves = Bishop::GetBishopMoves(x, y, board, GetColor());
-    auto rookMoves = Rook::GetRookMoves(x, y, board, GetColor());
+    auto bishopMoves = Bishop::GetBishopMoves(pos, board, GetColor());
+    auto rookMoves = Rook::GetRookMoves(pos, board, GetColor());
 
     moves.insert(moves.end(), bishopMoves.begin(), bishopMoves.end());
     moves.insert(moves.end(), rookMoves.begin(), rookMoves.end());

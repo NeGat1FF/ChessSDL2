@@ -5,7 +5,7 @@
 
 #include "SDL2/SDL_render.h"
 
-#include "Move.h"
+#include "Utils/Move.h"
 
 #include "Square.h"
 

@@ -71,7 +71,7 @@ void Board::SelectPiece(const std::shared_ptr<Square>& square)
     square->SetSelected(true);
     _selectedSquare = square;
 
-    auto moves = square->GetPiece()->GetMoves(square->GetPosition().x, square->GetPosition().y, *this);
+    auto moves = square->GetPiece()->GetMoves(square->GetPosition(), *this);
     for (auto move : moves) {
         move->SetSelected(true);
     }

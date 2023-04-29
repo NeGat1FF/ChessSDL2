@@ -4,7 +4,7 @@
 
 Knight::Knight(Color color) : Piece(Type::Knight, color) {}
 
-std::vector<std::shared_ptr<Square>> Knight::GetMoves(int x, int y, Board &board) const
+std::vector<std::shared_ptr<Square>> Knight::GetMoves(Position pos, Board &board) const
 {
     std::vector<std::shared_ptr<Square>> moves;
 
@@ -14,8 +14,8 @@ std::vector<std::shared_ptr<Square>> Knight::GetMoves(int x, int y, Board &board
 
     for (const auto &move : knightMoves)
     {
-        int newX = x + move.first;
-        int newY = y + move.second;
+        int newX = pos.x + move.first;
+        int newY = pos.y + move.second;
 
         if (board.IsValidCoordinate(newX, newY))
         {
