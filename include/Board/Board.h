@@ -36,9 +36,29 @@ public:
     void Click(int x, int y);
     const Move& GetLastMove() const;
 
+    bool IsTarget(const Position& pos, Color color);
+
+    std::shared_ptr<Square> GetEnPassantSquare() const;
+
+    std::string GetFEN() const;
+
 private:
     void UnselectAll();
     std::vector<std::vector<std::shared_ptr<Square>>> _board;
     std::shared_ptr<Square> _selectedSquare;
+
     Move _lastMove;
+
+    bool _isWhiteTurn;
+
+    std::shared_ptr<Square> _enPassantSquare;
+
+    int _halfMoveClock;
+    int _fullMoveNumber;
+    
+    bool _canWhiteCastleKingside;
+    bool _canWhiteCastleQueenside;
+
+    bool _canBlackCastleKingside;
+    bool _canBlackCastleQueenside;
 };

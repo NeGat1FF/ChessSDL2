@@ -1,6 +1,6 @@
 #include "Board/Board.h"
 
-Board::Board()
+Board::Board(): _isWhiteTurn(true), _halfMoveClock(0), _fullMoveNumber(1)
 {
     bool isWhite = true;
     for (int i = 0; i < 8; i++)
@@ -14,6 +14,12 @@ Board::Board()
         this->_board.push_back(row);
         isWhite = !isWhite;
     }
+
+    _canWhiteCastleKingside = true;
+    _canWhiteCastleQueenside = true;
+
+    _canBlackCastleKingside = true;
+    _canBlackCastleQueenside = true;
 }
 
 void Board::InitPieces()
@@ -43,9 +49,58 @@ void Board::InitPieces()
     this->_board[7][7]->SetPiece(std::make_shared<Rook>(Color::White));
 }
 
-const Move& Board::GetLastMove() const
+const Move &Board::GetLastMove() const
 {
     return _lastMove;
+}
+
+std::string Board::GetFEN() const{
+    std::string fen = "";
+    for(int i = 0; i < 8; i++){
+        int empty = 0;
+        for(int j = 0; j < 8; j++){
+            auto piece = _board[i][j]->GetPiece();
+            if(piece){
+                if(empty > 0){
+                    fen += std::to_string(empty);
+                    empty = 0;
+                }
+                fen += piece->GetFEN();
+            }else{
+                empty++;
+            }
+        }
+        if(empty > 0){
+            fen += std::to_string(empty);
+        }
+        if(i < 7){
+            fen += "/";
+        }
+    }
+    fen += " ";
+    fen += _isWhiteTurn ? "w" : "b";
+    fen += " ";
+
+    // Add castling availability
+    std::string castling = "";
+    if (_canWhiteCastleKingside) castling += "K";
+    if (_canWhiteCastleQueenside) castling += "Q";
+    if (_canBlackCastleKingside) castling += "k";
+    if (_canBlackCastleQueenside) castling += "q";
+
+    if (castling.empty()) {
+        fen += "-";
+    } else {
+        fen += castling;
+    }
+
+    fen += " ";
+    fen += _enPassantSquare ? _enPassantSquare->GetPosition().ToString() : "-";
+    fen += " ";
+    fen += std::to_string(_halfMoveClock);
+    fen += " ";
+    fen += std::to_string(_fullMoveNumber);
+    return fen;
 }
 
 void Board::Click(int x, int y)
@@ -53,42 +108,171 @@ void Board::Click(int x, int y)
     Position position(x / SQUARE_SIZE, y / SQUARE_SIZE);
     auto square = this->_board[position.y][position.x];
 
-    if(square->IsSelected()) {
-        if (_selectedSquare && _selectedSquare != square) {
+    if (square->IsSelected())
+    {
+        if (_selectedSquare && _selectedSquare != square)
+        {
             MovePiece(_selectedSquare, square);
         }
         UnselectAll();
         return;
     }
 
-    if (square->GetPiece()) {
-        SelectPiece(square);
+    if (square->GetPiece())
+    {
+        auto piece = square->GetPiece();
+        if(piece->GetColor() == Color::White && _isWhiteTurn || piece->GetColor() == Color::Black && !_isWhiteTurn)
+        {
+            SelectPiece(square);
+        }
     }
 }
 
-void Board::SelectPiece(const std::shared_ptr<Square>& square)
+void Board::SelectPiece(const std::shared_ptr<Square> &square)
 {
     square->SetSelected(true);
     _selectedSquare = square;
 
     auto moves = square->GetPiece()->GetMoves(square->GetPosition(), *this);
-    for (auto move : moves) {
+    for (auto move : moves)
+    {
         move->SetSelected(true);
     }
 }
 
-void Board::MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare)
+void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
 {
-    toSquare->SetPiece(fromSquare->GetPiece());
-    toSquare->GetPiece()->Move();
+    std::shared_ptr<Piece> piece = fromSquare->GetPiece();
+    Color color = piece->GetColor();
+    
+    // Update castling availability
+    if (piece->GetType() == Type::King) {
+        if (color == Color::White) {
+            _canWhiteCastleKingside = false;
+            _canWhiteCastleQueenside = false;
+        } else {
+            _canBlackCastleKingside = false;
+            _canBlackCastleQueenside = false;
+        }
+    } else if (piece->GetType() == Type::Rook) {
+        if (color == Color::White) {
+            if (fromSquare->GetPosition() == Position("h1")) {
+                _canWhiteCastleKingside = false;
+            } else if (fromSquare->GetPosition() == Position("a1")) {
+                _canWhiteCastleQueenside = false;
+            }
+        } else {
+            if (fromSquare->GetPosition() == Position("h8")) {
+                _canBlackCastleKingside = false;
+            } else if (fromSquare->GetPosition() == Position("a8")) {
+                _canBlackCastleQueenside = false;
+            }
+        }
+    }
+
+
+    _halfMoveClock++;
+
+    if(piece->GetType() == Type::Pawn || toSquare->GetPiece() != nullptr){
+        _halfMoveClock = 0;
+    }
+
+    toSquare->SetPiece(piece);
+    piece->Move();
 
     fromSquare->SetPiece(nullptr);
 
     _lastMove._from = fromSquare->GetPosition();
     _lastMove._to = toSquare->GetPosition();
-    _lastMove._piece = toSquare->GetPiece();
+    _lastMove._piece = piece;
+
+    // Handle promotion
+    if(piece->GetType() == Type::Pawn && (toSquare->GetPosition().y == 0 || toSquare->GetPosition().y == 7)){
+        toSquare->SetPiece(std::make_shared<Queen>(piece->GetColor()));
+    }
+
+    // Handle castling move
+    if (piece->GetType() == Type::King && std::abs(toSquare->GetPosition().x - fromSquare->GetPosition().x) == 2)
+    {
+        std::shared_ptr<Square> rookFromSquare;
+        std::shared_ptr<Square> rookToSquare;
+
+        // King-side castling
+        if (toSquare->GetPosition().x > fromSquare->GetPosition().x)
+        {
+            rookFromSquare = GetSquare(toSquare->GetPosition().x + 1, toSquare->GetPosition().y);
+            rookToSquare = GetSquare(toSquare->GetPosition().x - 1, toSquare->GetPosition().y);
+        }
+        // Queen-side castling
+        else
+        {
+            rookFromSquare = GetSquare(toSquare->GetPosition().x - 2, toSquare->GetPosition().y);
+            rookToSquare = GetSquare(toSquare->GetPosition().x + 1, toSquare->GetPosition().y);
+        }
+
+        rookToSquare->SetPiece(rookFromSquare->GetPiece());
+        rookToSquare->GetPiece()->Move();
+        rookFromSquare->SetPiece(nullptr);
+
+    }
+
+    if(_enPassantSquare && toSquare->GetPosition() == _enPassantSquare->GetPosition()){
+        std::shared_ptr<Square> pawnSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? 1 : -1));
+        pawnSquare->SetPiece(nullptr);
+    }
+
+    _enPassantSquare = nullptr;
+
+    // Handle en passant move
+    if (piece->GetType() == Type::Pawn && std::abs(toSquare->GetPosition().y - fromSquare->GetPosition().y) == 2)
+    {
+        _enPassantSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? 1 : -1));
+    }
+
+    if(_isWhiteTurn){
+        _isWhiteTurn = false;
+    } else {
+        _isWhiteTurn = true;
+        _fullMoveNumber++;
+    }
 }
 
+std::shared_ptr<Square> Board::GetEnPassantSquare() const
+{
+    return _enPassantSquare;
+}
+
+bool Board::IsTarget(const Position &pos, Color color)
+{
+    std::vector<std::shared_ptr<Square>> moves;
+    for (auto row : this->_board)
+    {
+        for (auto square : row)
+        {
+            if (square->GetPiece() && square->GetPiece()->GetColor() != color)
+            {
+                auto piece = square->GetPiece();
+                if (piece->GetType() == Type::King)
+                {
+                    auto king = std::dynamic_pointer_cast<King>(piece);
+                    moves = king->GetMovesWithoutChecks(square->GetPosition(), *this);
+                }
+                else
+                {
+                    moves = piece->GetMoves(square->GetPosition(), *this);
+                }
+                for (auto move : moves)
+                {
+                    if (move->GetPosition() == pos)
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
 
 void Board::UnselectAll()
 {

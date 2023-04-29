@@ -11,6 +11,8 @@ std::vector<std::shared_ptr<Square>> Pawn::GetMoves(Position pos, Board &board) 
     std::vector<std::shared_ptr<Square>> moves;
     auto lastMove = board.GetLastMove();
     auto lastMovePiece = lastMove._piece;
+
+    auto enPassantSquare = board.GetEnPassantSquare();
     if (GetColor() == Color::White)
     {
         auto nextSquare = board.GetSquare(pos.x, pos.y - 1);
@@ -38,24 +40,12 @@ std::vector<std::shared_ptr<Square>> Pawn::GetMoves(Position pos, Board &board) 
             moves.push_back(nextSquare);
         }
 
-
         // Check for en passant
-        if (lastMovePiece && lastMovePiece->GetType() == Type::Pawn && lastMovePiece->GetColor() != GetColor())
+        if (enPassantSquare && enPassantSquare->GetPosition().y == pos.y - 1)
         {
-            Position lastMoveTo = lastMove._to;
-            Position lastMoveFrom = lastMove._from;
-            
-
-            if (lastMoveTo.y == pos.y && lastMoveFrom.y == pos.y - 2)
+            if (enPassantSquare->GetPosition().x == pos.x - 1 || enPassantSquare->GetPosition().x == pos.x + 1)
             {
-                if (lastMoveTo.x == pos.x - 1)
-                {
-                    moves.push_back(board.GetSquare(pos.x - 1, pos.y - 1));
-                }
-                if (lastMoveTo.x == pos.x + 1)
-                {
-                    moves.push_back(board.GetSquare(pos.x + 1, pos.y - 1));
-                }
+                moves.push_back(enPassantSquare);
             }
         }
     }
@@ -87,24 +77,19 @@ std::vector<std::shared_ptr<Square>> Pawn::GetMoves(Position pos, Board &board) 
         }
 
         // Check for en passant
-        if (lastMovePiece && lastMovePiece->GetType() == Type::Pawn && lastMovePiece->GetColor() != GetColor())
+        if (enPassantSquare && enPassantSquare->GetPosition().y == pos.y + 1)
         {
-            Position lastMoveTo = lastMove._to;
-            Position lastMoveFrom = lastMove._from;
-
-            if (lastMoveTo.y == pos.y && lastMoveFrom.y == pos.y - 2)
+            if (enPassantSquare->GetPosition().x == pos.x - 1 || enPassantSquare->GetPosition().x == pos.x + 1)
             {
-                if (lastMoveTo.x == pos.x - 1)
-                {
-                    moves.push_back(board.GetSquare(pos.x - 1, pos.y - 1));
-                }
-                if (lastMoveTo.x == pos.x + 1)
-                {
-                    moves.push_back(board.GetSquare(pos.x + 1, pos.y - 1));
-                }
+                moves.push_back(enPassantSquare);
             }
         }
     }
 
     return moves;
+}
+
+char Pawn::GetFEN() const
+{
+    return GetColor() == Color::White ? 'P' : 'p';
 }

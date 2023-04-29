@@ -38,3 +38,8 @@ std::vector<std::shared_ptr<Square>> Rook::GetRookMoves(Position pos, Board& boa
 
     return moves;
 }
+
+char Rook::GetFEN() const
+{
+    return GetColor() == Color::White ? 'R' : 'r';
+}

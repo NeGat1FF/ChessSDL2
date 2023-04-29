@@ -32,3 +32,8 @@ std::vector<std::shared_ptr<Square>> Knight::GetMoves(Position pos, Board &board
 
     return moves;
 }
+
+char Knight::GetFEN() const
+{
+    return GetColor() == Color::White ? 'N' : 'n';
+}

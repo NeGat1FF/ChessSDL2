@@ -19,3 +19,8 @@ std::vector<std::shared_ptr<Square>> Queen::GetMoves(Position pos, Board &board)
 
     return moves;
 }
+
+char Queen::GetFEN() const
+{
+    return GetColor() == Color::White ? 'Q' : 'q';
+}

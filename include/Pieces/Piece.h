@@ -36,6 +36,7 @@ public:
     std::string ToString() const;
 
     virtual std::vector<std::shared_ptr<Square>> GetMoves(Position pos, Board& board) const = 0;
+    virtual char GetFEN() const = 0;
 
     void Move();
     bool HasMoved() const;

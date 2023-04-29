@@ -23,6 +23,11 @@ int main(int argc, char *argv[]){
             if(e.type == SDL_MOUSEBUTTONDOWN){
                 board.Click(e.button.x, e.button.y);
             }
+            if(e.type == SDL_KEYDOWN){
+                if(e.key.keysym.sym == SDLK_SPACE){
+                    SDL_Log(board.GetFEN().c_str());
+                }
+            }
             if(e.type == SDL_QUIT){
                 break;
             }
