@@ -1,12 +1,6 @@
 #include "Pieces/Piece.h"
 
-Piece::Piece(Type type, Color color) : _type(type), _color(color)
-{
-}
-
-Piece::~Piece()
-{
-}
+Piece::Piece(Type type, Color color) : _type(type), _color(color) {}
 
 Type Piece::GetType() const
 {
@@ -53,6 +47,16 @@ std::string Piece::ToString() const
 
     res += "t45.png";
     return res;
+}
+
+void Piece::Move()
+{
+    _hasMoved = true;
+}
+
+bool Piece::HasMoved() const
+{
+    return _hasMoved;
 }
 
 Color Piece::GetColor() const

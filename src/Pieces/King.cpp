@@ -1,13 +1,31 @@
 #include "Pieces/King.h"
 
-King::King(Color color) : Piece(Type::King, color)
-{
-}
+#include "Board/Board.h"
 
-King::~King()
-{
-}
+King::King(Color color) : Piece(Type::King, color) {}
 
-std::vector<std::shared_ptr<Square>> King::GetMoves(int x, int y, Board& board) const {
-    return std::vector<std::shared_ptr<Square>>();
+std::vector<std::shared_ptr<Square>> King::GetMoves(int x, int y, Board &board) const {
+    std::vector<std::shared_ptr<Square>> moves;
+    int dx[] = {-1, -1, -1, 0, 1, 1, 1, 0};
+    int dy[] = {-1, 0, 1, 1, 1, 0, -1, -1};
+
+    for (int i = 0; i < 8; ++i) {
+        int newX = x + dx[i];
+        int newY = y + dy[i];
+
+        if (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
+            auto nextSquare = board.GetSquare(newX, newY);
+            if (nextSquare->GetPiece()) {
+                if (nextSquare->GetPiece()->GetColor() != GetColor()) {
+                    moves.push_back(nextSquare);
+                }
+            } else {
+                moves.push_back(nextSquare);
+            }
+        }
+    }
+
+    // TODO: Add castling logic if needed
+
+    return moves;
 }

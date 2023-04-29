@@ -5,6 +5,8 @@
 
 #include "SDL2/SDL_render.h"
 
+#include "Move.h"
+
 #include "Square.h"
 
 #include "Pieces/Piece.h"
@@ -27,10 +29,16 @@ public:
 
     bool IsValidCoordinate(int x, int y) const;
 
+    void MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
+    void SelectPiece(const std::shared_ptr<Square>& square);
+
     std::shared_ptr<Square> GetSquare(int x, int y);
     void Click(int x, int y);
+    const Move& GetLastMove() const;
 
 private:
     void UnselectAll();
     std::vector<std::vector<std::shared_ptr<Square>>> _board;
+    std::shared_ptr<Square> _selectedSquare;
+    Move _lastMove;
 };

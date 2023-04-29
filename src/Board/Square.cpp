@@ -2,12 +2,15 @@
 
 Square::Square(int x, int y, bool isWhite): _isWhite(isWhite), _isSelected(false)
 {
-    this->_rect.x = x;
-    this->_rect.y = y;
+    this->_rect.x = x * SQUARE_SIZE;
+    this->_rect.y = y * SQUARE_SIZE;
 
     this->_rect.w = this->_rect.h = SQUARE_SIZE;
 
     this->_piece = nullptr;
+
+    this->_position.x = x;
+    this->_position.y = y;
 }
 
 SDL_Rect *Square::GetRect()
@@ -25,11 +28,20 @@ void Square::SetSelected(bool isSelected)
     this->_isSelected = isSelected;
 }
 
+Position Square::GetPosition() const
+{
+    return this->_position;
+}
+
 void Square::Draw(SDL_Renderer *renderer)
 {
     if (_isSelected)
     {
         SDL_SetRenderDrawColor(renderer, 235, 52, 73, 255);
+        SDL_RenderFillRect(renderer, &this->_rect);
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &this->_rect);
     }
     else
     {
@@ -41,9 +53,10 @@ void Square::Draw(SDL_Renderer *renderer)
         {
             SDL_SetRenderDrawColor(renderer, 118, 150, 86, 255);
         }
+
+        SDL_RenderFillRect(renderer, &this->_rect);
     }
 
-    SDL_RenderFillRect(renderer, &this->_rect);
 
     if (this->_piece)
     {

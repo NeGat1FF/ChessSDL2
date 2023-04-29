@@ -2,35 +2,37 @@
 
 #include "Board/Board.h"
 
-Rook::Rook(Color color) : Piece(Type::Rook, color)
+Rook::Rook(Color color) : Piece(Type::Rook, color) {}
+
+std::vector<std::shared_ptr<Square>> Rook::GetMoves(int x, int y, Board &board) const
 {
+    return GetRookMoves(x, y, board, GetColor());
 }
 
-Rook::~Rook()
-{
-}
-
-
-std::vector<std::shared_ptr<Square>> Rook::GetMoves(int x, int y, Board& board) const {
+std::vector<std::shared_ptr<Square>> Rook::GetRookMoves(int x, int y, Board& board, Color color){
     std::vector<std::shared_ptr<Square>> moves;
-    
-    // Check all squares in the same row as the rook
-    for (int i = 0; i < 8; i++) {
-        if (i != x) {
-            std::shared_ptr<Square> square = board.GetSquare(i, y);
-            if (square && (!square->GetPiece() || square->GetPiece()->GetColor() != this->GetColor())) {
-                moves.push_back(square);
-            }
-        }
-    }
 
-    // Check all squares in the same column as the rook
-    for (int j = 0; j < 8; j++) {
-        if (j != y) {
-            std::shared_ptr<Square> square = board.GetSquare(x, j);
-            if (square && (!square->GetPiece() || square->GetPiece()->GetColor() != this->GetColor())) {
+    int dx[] = {1, -1, 0, 0};
+    int dy[] = {0, 0, 1, -1};
+
+    for (int direction = 0; direction < 4; ++direction) {
+        int newX = x + dx[direction];
+        int newY = y + dy[direction];
+
+        while (newX >= 0 && newX < 8 && newY >= 0 && newY < 8) {
+            auto square = board.GetSquare(newX, newY);
+
+            if (square->GetPiece() == nullptr) {
                 moves.push_back(square);
+            } else {
+                if (square->GetPiece()->GetColor() != color) {
+                    moves.push_back(square);
+                }
+                break;
             }
+
+            newX += dx[direction];
+            newY += dy[direction];
         }
     }
 

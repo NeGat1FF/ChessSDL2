@@ -35,8 +35,11 @@ public:
 
     virtual std::vector<std::shared_ptr<Square>> GetMoves(int x, int y, Board& board) const = 0;
 
-    ~Piece();
+    void Move();
+    bool HasMoved() const;
+
 private:
+    bool _hasMoved = false;
     Type _type;
     Color _color;
 };

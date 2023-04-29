@@ -8,7 +8,7 @@ Board::Board()
         std::vector<std::shared_ptr<Square>> row;
         for (int j = 0; j < 8; j++)
         {
-            row.push_back(std::make_shared<Square>(j * SQUARE_SIZE, i * SQUARE_SIZE, isWhite));
+            row.push_back(std::make_shared<Square>(j, i, isWhite));
             isWhite = !isWhite;
         }
         this->_board.push_back(row);
@@ -43,25 +43,52 @@ void Board::InitPieces()
     this->_board[7][7]->SetPiece(std::make_shared<Rook>(Color::White));
 }
 
+const Move& Board::GetLastMove() const
+{
+    return _lastMove;
+}
+
 void Board::Click(int x, int y)
 {
-    auto square = this->_board[y / SQUARE_SIZE][x / SQUARE_SIZE];
+    Position position(x / SQUARE_SIZE, y / SQUARE_SIZE);
+    auto square = this->_board[position.y][position.x];
 
-    if(square->IsSelected()){
+    if(square->IsSelected()) {
+        if (_selectedSquare && _selectedSquare != square) {
+            MovePiece(_selectedSquare, square);
+        }
         UnselectAll();
         return;
     }
-    else{
-        square->SetSelected(true);
-    }
 
-    if(square->GetPiece()){
-        auto moves = square->GetPiece()->GetMoves(x / SQUARE_SIZE, y / SQUARE_SIZE, *this);
-        for(auto move : moves){
-            move->SetSelected(true);
-        }
+    if (square->GetPiece()) {
+        SelectPiece(square);
     }
 }
+
+void Board::SelectPiece(const std::shared_ptr<Square>& square)
+{
+    square->SetSelected(true);
+    _selectedSquare = square;
+
+    auto moves = square->GetPiece()->GetMoves(square->GetPosition().x, square->GetPosition().y, *this);
+    for (auto move : moves) {
+        move->SetSelected(true);
+    }
+}
+
+void Board::MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare)
+{
+    toSquare->SetPiece(fromSquare->GetPiece());
+    toSquare->GetPiece()->Move();
+
+    fromSquare->SetPiece(nullptr);
+
+    _lastMove._from = fromSquare->GetPosition();
+    _lastMove._to = toSquare->GetPosition();
+    _lastMove._piece = toSquare->GetPiece();
+}
+
 
 void Board::UnselectAll()
 {
@@ -72,6 +99,8 @@ void Board::UnselectAll()
             square->SetSelected(false);
         }
     }
+
+    _selectedSquare = nullptr;
 }
 
 bool Board::IsValidCoordinate(int x, int y) const

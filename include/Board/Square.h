@@ -6,6 +6,11 @@
 
 #define SQUARE_SIZE 45
 
+struct Position{
+    int x;
+    int y;
+};
+
 class Square
 {
 public:
@@ -21,6 +26,8 @@ public:
     void SetSelected(bool isSelected);
     bool IsSelected() const;
 
+    Position GetPosition() const;
+
     ~Square();
 
 private:
@@ -28,4 +35,5 @@ private:
     bool _isSelected;
     const bool _isWhite;
     std::shared_ptr<Piece> _piece;
+    Position _position;
 };
