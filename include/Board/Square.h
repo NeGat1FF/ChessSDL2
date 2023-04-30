@@ -14,22 +14,20 @@ public:
 
     SDL_Rect* GetRect();
 
-    void SetPiece(std::shared_ptr<Piece> piece);
     void Draw(SDL_Renderer *renderer);
 
     std::shared_ptr<Piece> GetPiece() const;
+    void SetPiece(const std::shared_ptr<Piece>& piece);
 
-    void SetSelected(bool isSelected);
     bool IsSelected() const;
+    void SetSelected(bool isSelected);
 
     Position GetPosition() const;
-
-    ~Square();
 
 private:
     SDL_Rect _rect;
     bool _isSelected;
+    Position _position;
     const bool _isWhite;
     std::shared_ptr<Piece> _piece;
-    Position _position;
 };

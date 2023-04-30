@@ -2,13 +2,15 @@
 
 #include <vector>
 #include <memory>
+#include <string>
+#include <sstream>
 
-#include "SDL2/SDL_render.h"
+#include <SDL2/SDL_render.h>
 
 #include "Utils/Move.h"
-
 #include "Square.h"
 
+// Piece headers
 #include "Pieces/Piece.h"
 #include "Pieces/Pawn.h"
 #include "Pieces/Rook.h"
@@ -22,13 +24,11 @@ class Board
 {
 public:
     Board();
-    ~Board();
 
     void Draw(SDL_Renderer *renderer);
     void InitPieces();
 
     bool IsValidCoordinate(int x, int y) const;
-
     void MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
     void SelectPiece(const std::shared_ptr<Square>& square);
 
@@ -36,29 +36,33 @@ public:
     void Click(int x, int y);
     const Move& GetLastMove() const;
 
+    void LoadFEN(const std::string& fen);
     bool IsTarget(const Position& pos, Color color);
 
     std::shared_ptr<Square> GetEnPassantSquare() const;
-
     std::string GetFEN() const;
 
+
 private:
-    void UnselectAll();
-    std::vector<std::vector<std::shared_ptr<Square>>> _board;
-    std::shared_ptr<Square> _selectedSquare;
+
+    void _unselectAll();
+    std::shared_ptr<Piece> _getPieceFromFEN(char fenChar);
 
     Move _lastMove;
 
-    bool _isWhiteTurn;
-
-    std::shared_ptr<Square> _enPassantSquare;
+    Color _turnColor;
 
     int _halfMoveClock;
     int _fullMoveNumber;
-    
+
     bool _canWhiteCastleKingside;
     bool _canWhiteCastleQueenside;
 
     bool _canBlackCastleKingside;
     bool _canBlackCastleQueenside;
+
+    std::shared_ptr<Square> _selectedSquare;
+    std::shared_ptr<Square> _enPassantSquare;
+
+    std::vector<std::vector<std::shared_ptr<Square>>> _board;
 };

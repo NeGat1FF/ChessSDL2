@@ -13,6 +13,10 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
+    SDL_Surface *icon = IMG_Load("../assets/icon/icon.ico");
+
+    SDL_SetWindowIcon(window, icon);
+
     Board board;
 
     board.InitPieces();
@@ -25,7 +29,7 @@ int main(int argc, char *argv[]){
             }
             if(e.type == SDL_KEYDOWN){
                 if(e.key.keysym.sym == SDLK_SPACE){
-                    SDL_Log(board.GetFEN().c_str());
+                    // SDL_Log(board.GetFEN().c_str());
                 }
             }
             if(e.type == SDL_QUIT){

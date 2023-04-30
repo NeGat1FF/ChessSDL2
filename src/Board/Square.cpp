@@ -3,7 +3,7 @@
 Square::Square(int x, int y, bool isWhite): _isWhite(isWhite), _isSelected(false)
 {
     this->_rect.x = x * SQUARE_SIZE;
-    this->_rect.y = y * SQUARE_SIZE;
+    this->_rect.y = (7 - y) * SQUARE_SIZE;
 
     this->_rect.w = this->_rect.h = SQUARE_SIZE;
 
@@ -16,21 +16,6 @@ Square::Square(int x, int y, bool isWhite): _isWhite(isWhite), _isSelected(false
 SDL_Rect *Square::GetRect()
 {
     return &this->_rect;
-}
-
-void Square::SetPiece(std::shared_ptr<Piece> piece)
-{
-    this->_piece = piece;
-}
-
-void Square::SetSelected(bool isSelected)
-{
-    this->_isSelected = isSelected;
-}
-
-Position Square::GetPosition() const
-{
-    return this->_position;
 }
 
 void Square::Draw(SDL_Renderer *renderer)
@@ -69,11 +54,22 @@ std::shared_ptr<Piece> Square::GetPiece() const
     return this->_piece;
 }
 
+void Square::SetPiece(const std::shared_ptr<Piece>& piece)
+{
+    this->_piece = piece;
+}
+
 bool Square::IsSelected() const
 {
     return this->_isSelected;
 }
 
-Square::~Square()
+void Square::SetSelected(bool isSelected)
 {
+    this->_isSelected = isSelected;
+}
+
+Position Square::GetPosition() const
+{
+    return this->_position;
 }

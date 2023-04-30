@@ -1,14 +1,14 @@
 #include "Board/Board.h"
 
-Board::Board(): _isWhiteTurn(true), _halfMoveClock(0), _fullMoveNumber(1)
+Board::Board() : _turnColor(Color::White), _halfMoveClock(0), _fullMoveNumber(1)
 {
-    bool isWhite = true;
-    for (int i = 0; i < 8; i++)
+    bool isWhite = false;
+    for (int x = 0; x < 8; ++x)
     {
         std::vector<std::shared_ptr<Square>> row;
-        for (int j = 0; j < 8; j++)
+        for (int y = 7; y >= 0; --y)
         {
-            row.push_back(std::make_shared<Square>(j, i, isWhite));
+            row.push_back(std::make_shared<Square>(x, 7 - y, isWhite));
             isWhite = !isWhite;
         }
         this->_board.push_back(row);
@@ -24,29 +24,9 @@ Board::Board(): _isWhiteTurn(true), _halfMoveClock(0), _fullMoveNumber(1)
 
 void Board::InitPieces()
 {
-    for (int i = 0; i < 8; i++)
-    {
-        this->_board[1][i]->SetPiece(std::make_shared<Pawn>(Color::Black));
-        this->_board[6][i]->SetPiece(std::make_shared<Pawn>(Color::White));
-    }
+    std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-    this->_board[0][0]->SetPiece(std::make_shared<Rook>(Color::Black));
-    this->_board[0][1]->SetPiece(std::make_shared<Knight>(Color::Black));
-    this->_board[0][2]->SetPiece(std::make_shared<Bishop>(Color::Black));
-    this->_board[0][3]->SetPiece(std::make_shared<Queen>(Color::Black));
-    this->_board[0][4]->SetPiece(std::make_shared<King>(Color::Black));
-    this->_board[0][5]->SetPiece(std::make_shared<Bishop>(Color::Black));
-    this->_board[0][6]->SetPiece(std::make_shared<Knight>(Color::Black));
-    this->_board[0][7]->SetPiece(std::make_shared<Rook>(Color::Black));
-
-    this->_board[7][0]->SetPiece(std::make_shared<Rook>(Color::White));
-    this->_board[7][1]->SetPiece(std::make_shared<Knight>(Color::White));
-    this->_board[7][2]->SetPiece(std::make_shared<Bishop>(Color::White));
-    this->_board[7][3]->SetPiece(std::make_shared<Queen>(Color::White));
-    this->_board[7][4]->SetPiece(std::make_shared<King>(Color::White));
-    this->_board[7][5]->SetPiece(std::make_shared<Bishop>(Color::White));
-    this->_board[7][6]->SetPiece(std::make_shared<Knight>(Color::White));
-    this->_board[7][7]->SetPiece(std::make_shared<Rook>(Color::White));
+    LoadFEN(fen);
 }
 
 const Move &Board::GetLastMove() const
@@ -54,43 +34,59 @@ const Move &Board::GetLastMove() const
     return _lastMove;
 }
 
-std::string Board::GetFEN() const{
+std::string Board::GetFEN() const
+{
     std::string fen = "";
-    for(int i = 0; i < 8; i++){
+    for (int i = 0; i < 8; i++)
+    {
         int empty = 0;
-        for(int j = 0; j < 8; j++){
-            auto piece = _board[i][j]->GetPiece();
-            if(piece){
-                if(empty > 0){
+        for (int j = 0; j < 8; j++)
+        {
+            auto piece = _board[j][7 - i]->GetPiece();
+            if (piece)
+            {
+                if (empty > 0)
+                {
                     fen += std::to_string(empty);
                     empty = 0;
                 }
                 fen += piece->GetFEN();
-            }else{
+            }
+            else
+            {
                 empty++;
             }
         }
-        if(empty > 0){
+        if (empty > 0)
+        {
             fen += std::to_string(empty);
         }
-        if(i < 7){
+        if (i < 7)
+        {
             fen += "/";
         }
     }
     fen += " ";
-    fen += _isWhiteTurn ? "w" : "b";
+    fen += _turnColor == Color::White ? "w" : "b";
     fen += " ";
 
     // Add castling availability
     std::string castling = "";
-    if (_canWhiteCastleKingside) castling += "K";
-    if (_canWhiteCastleQueenside) castling += "Q";
-    if (_canBlackCastleKingside) castling += "k";
-    if (_canBlackCastleQueenside) castling += "q";
+    if (_canWhiteCastleKingside)
+        castling += "K";
+    if (_canWhiteCastleQueenside)
+        castling += "Q";
+    if (_canBlackCastleKingside)
+        castling += "k";
+    if (_canBlackCastleQueenside)
+        castling += "q";
 
-    if (castling.empty()) {
+    if (castling.empty())
+    {
         fen += "-";
-    } else {
+    }
+    else
+    {
         fen += castling;
     }
 
@@ -103,10 +99,118 @@ std::string Board::GetFEN() const{
     return fen;
 }
 
+std::shared_ptr<Piece> Board::_getPieceFromFEN(char fenChar)
+{
+    Color color = std::isupper(fenChar) ? Color::White : Color::Black;
+    char pieceType = std::tolower(fenChar);
+
+    switch (pieceType)
+    {
+    case 'p':
+        return std::make_shared<Pawn>(color);
+    case 'r':
+        return std::make_shared<Rook>(color);
+    case 'n':
+        return std::make_shared<Knight>(color);
+    case 'b':
+        return std::make_shared<Bishop>(color);
+    case 'q':
+        return std::make_shared<Queen>(color);
+    case 'k':
+        return std::make_shared<King>(color);
+    default:
+        return nullptr;
+    }
+}
+
+void Board::LoadFEN(const std::string &fen)
+{
+
+    // Clear board
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; ++j)
+        {
+            _board[i][j]->SetPiece(nullptr);
+        }
+    }
+
+    std::istringstream iss(fen);
+    std::vector<std::string> fenComponents;
+    std::string component;
+
+    while (std::getline(iss, component, ' '))
+    {
+        fenComponents.push_back(component);
+    }
+
+    std::vector<std::string> ranks;
+    std::string rank;
+    std::istringstream iss2(fenComponents[0]);
+    while (std::getline(iss2, rank, '/'))
+    {
+        ranks.push_back(rank);
+    }
+
+    for (int rows = 0; rows < 8; rows++)
+    {
+        int columns = 0;
+        for (char c : ranks[rows])
+        {
+            if (std::isdigit(c))
+            {
+                columns += c - '0';
+            }
+            else
+            {
+                auto piece = _getPieceFromFEN(c);
+                _board[columns][7 - rows]->SetPiece(piece);
+                columns++;
+            }
+        }
+    }
+
+    _turnColor = fenComponents[1] == "w" ? Color::White : Color::Black;
+
+    if (fenComponents[2] != "-")
+    {
+        for (char c : fenComponents[2])
+        {
+            switch (c)
+            {
+            case 'K':
+                _canWhiteCastleKingside = true;
+                break;
+            case 'Q':
+                _canWhiteCastleQueenside = true;
+                break;
+            case 'k':
+                _canBlackCastleKingside = true;
+                break;
+            case 'q':
+                _canBlackCastleQueenside = true;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    if (fenComponents[3] != "-")
+    {
+        Position position(fenComponents[3]);
+        _enPassantSquare = GetSquare(position.x, position.y);
+    }
+
+    _halfMoveClock = std::stoi(fenComponents[4]);
+
+    _fullMoveNumber = std::stoi(fenComponents[5]);
+}
+
 void Board::Click(int x, int y)
 {
-    Position position(x / SQUARE_SIZE, y / SQUARE_SIZE);
-    auto square = this->_board[position.y][position.x];
+    Position position(x / SQUARE_SIZE, 7 - y / SQUARE_SIZE);
+    auto square = this->_board[position.x][position.y];
 
     if (square->IsSelected())
     {
@@ -114,16 +218,25 @@ void Board::Click(int x, int y)
         {
             MovePiece(_selectedSquare, square);
         }
-        UnselectAll();
+        _unselectAll();
         return;
     }
-
-    if (square->GetPiece())
+    else
     {
-        auto piece = square->GetPiece();
-        if(piece->GetColor() == Color::White && _isWhiteTurn || piece->GetColor() == Color::Black && !_isWhiteTurn)
+        if (square->GetPiece())
         {
-            SelectPiece(square);
+            auto piece = square->GetPiece();
+            if (piece->GetColor() == _turnColor)
+            {
+                if(_selectedSquare)
+                {
+                    _unselectAll();
+                }
+                SelectPiece(square);
+            }
+        }
+        else{
+            _unselectAll();
         }
     }
 }
@@ -134,6 +247,7 @@ void Board::SelectPiece(const std::shared_ptr<Square> &square)
     _selectedSquare = square;
 
     auto moves = square->GetPiece()->GetMoves(square->GetPosition(), *this);
+
     for (auto move : moves)
     {
         move->SetSelected(true);
@@ -144,36 +258,51 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
 {
     std::shared_ptr<Piece> piece = fromSquare->GetPiece();
     Color color = piece->GetColor();
-    
+
     // Update castling availability
-    if (piece->GetType() == Type::King) {
-        if (color == Color::White) {
+    if (piece->GetType() == Type::King)
+    {
+        if (color == Color::White)
+        {
             _canWhiteCastleKingside = false;
             _canWhiteCastleQueenside = false;
-        } else {
+        }
+        else
+        {
             _canBlackCastleKingside = false;
             _canBlackCastleQueenside = false;
         }
-    } else if (piece->GetType() == Type::Rook) {
-        if (color == Color::White) {
-            if (fromSquare->GetPosition() == Position("h1")) {
+    }
+    else if (piece->GetType() == Type::Rook)
+    {
+        if (color == Color::White)
+        {
+            if (fromSquare->GetPosition() == Position("h1"))
+            {
                 _canWhiteCastleKingside = false;
-            } else if (fromSquare->GetPosition() == Position("a1")) {
+            }
+            else if (fromSquare->GetPosition() == Position("a1"))
+            {
                 _canWhiteCastleQueenside = false;
             }
-        } else {
-            if (fromSquare->GetPosition() == Position("h8")) {
+        }
+        else
+        {
+            if (fromSquare->GetPosition() == Position("h8"))
+            {
                 _canBlackCastleKingside = false;
-            } else if (fromSquare->GetPosition() == Position("a8")) {
+            }
+            else if (fromSquare->GetPosition() == Position("a8"))
+            {
                 _canBlackCastleQueenside = false;
             }
         }
     }
 
-
     _halfMoveClock++;
 
-    if(piece->GetType() == Type::Pawn || toSquare->GetPiece() != nullptr){
+    if (piece->GetType() == Type::Pawn || toSquare->GetPiece() != nullptr)
+    {
         _halfMoveClock = 0;
     }
 
@@ -187,7 +316,8 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
     _lastMove._piece = piece;
 
     // Handle promotion
-    if(piece->GetType() == Type::Pawn && (toSquare->GetPosition().y == 0 || toSquare->GetPosition().y == 7)){
+    if (piece->GetType() == Type::Pawn && (toSquare->GetPosition().y == 0 || toSquare->GetPosition().y == 7))
+    {
         toSquare->SetPiece(std::make_shared<Queen>(piece->GetColor()));
     }
 
@@ -213,11 +343,11 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
         rookToSquare->SetPiece(rookFromSquare->GetPiece());
         rookToSquare->GetPiece()->Move();
         rookFromSquare->SetPiece(nullptr);
-
     }
 
-    if(_enPassantSquare && toSquare->GetPosition() == _enPassantSquare->GetPosition()){
-        std::shared_ptr<Square> pawnSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? 1 : -1));
+    if (_enPassantSquare && toSquare->GetPosition() == _enPassantSquare->GetPosition())
+    {
+        std::shared_ptr<Square> pawnSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? -1 : 1));
         pawnSquare->SetPiece(nullptr);
     }
 
@@ -226,13 +356,16 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
     // Handle en passant move
     if (piece->GetType() == Type::Pawn && std::abs(toSquare->GetPosition().y - fromSquare->GetPosition().y) == 2)
     {
-        _enPassantSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? 1 : -1));
+        _enPassantSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? -1 : 1));
     }
 
-    if(_isWhiteTurn){
-        _isWhiteTurn = false;
-    } else {
-        _isWhiteTurn = true;
+    if (_turnColor == Color::White)
+    {
+        _turnColor = Color::Black;
+    }
+    else
+    {
+        _turnColor = Color::White;
         _fullMoveNumber++;
     }
 }
@@ -274,7 +407,7 @@ bool Board::IsTarget(const Position &pos, Color color)
     return false;
 }
 
-void Board::UnselectAll()
+void Board::_unselectAll()
 {
     for (auto row : this->_board)
     {
@@ -298,11 +431,7 @@ std::shared_ptr<Square> Board::GetSquare(int x, int y)
     {
         return nullptr;
     }
-    return this->_board[y][x];
-}
-
-Board::~Board()
-{
+    return this->_board[x][y];
 }
 
 void Board::Draw(SDL_Renderer *renderer)
