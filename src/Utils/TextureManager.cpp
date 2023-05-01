@@ -1,5 +1,4 @@
-// TextureManager.cpp
-#include "TextureManager/TextureManager.h"
+#include "Utils/TextureManager.h"
 
 bool TextureManager::Load(const std::string& id, const std::string& filename, SDL_Renderer* renderer) {
     SDL_Surface* surface = IMG_Load(filename.data());
@@ -15,7 +14,7 @@ bool TextureManager::Load(const std::string& id, const std::string& filename, SD
         return false;
     }
 
-    textures[id] = texture;
+    _textures[id] = texture;
     return true;
 }
 
@@ -61,7 +60,7 @@ bool TextureManager::LoadSVG(const std::string& id, const std::string& filename,
         return false;
     }
 
-    textures[id] = texture;
+    _textures[id] = texture;
     return true;
 }
 
@@ -73,11 +72,15 @@ bool TextureManager::LoadSVG(const std::string& dir,unsigned int size, SDL_Rende
     
         for(const auto& entry : std::filesystem::directory_iterator(dir)){
             std::string path = entry.path().string();
-            std::string id = entry.path().filename().string();
-            if(!LoadSVG(id, path, size, renderer)){
-                return false;
-            }
+            std::string id = entry.path().stem().string();
+            LoadSVG(id, path, size, renderer);
         }
+
+        // Get number of files in directory
+        int num_files = std::distance(std::filesystem::directory_iterator(dir), std::filesystem::directory_iterator{});
+
+        if(_textures.size() != num_files)
+            return false;
     
         return true;
 }
@@ -85,16 +88,16 @@ bool TextureManager::LoadSVG(const std::string& dir,unsigned int size, SDL_Rende
 void TextureManager::Draw(const std::string& id, int x, int y, int width, int height, SDL_Renderer* renderer, SDL_RendererFlip flip) {
     SDL_Rect srcRect = {0, 0, width, height};
     SDL_Rect destRect = {x, y, width, height};
-    SDL_RenderCopyEx(renderer, textures[id], &srcRect, &destRect, 0, nullptr, flip);
+    SDL_RenderCopyEx(renderer, _textures[id], &srcRect, &destRect, 0, nullptr, flip);
 }
 
 void TextureManager::Draw(const std::string& id, const SDL_Rect* rect, SDL_Renderer* renderer, SDL_RendererFlip flip) {
-    SDL_RenderCopyEx(renderer, textures[id], nullptr, rect, 0, nullptr, flip);
+    SDL_RenderCopyEx(renderer, _textures[id], nullptr, rect, 0, nullptr, flip);
 }
 
 void TextureManager::Cleanup() {
-    for (auto& texture : textures) {
+    for (auto& texture : _textures) {
         SDL_DestroyTexture(texture.second);
     }
-    textures.clear();
+    _textures.clear();
 }

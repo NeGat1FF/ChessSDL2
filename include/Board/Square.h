@@ -2,7 +2,7 @@
 
 #include "SDL2/SDL_render.h"
 #include "Pieces/Piece.h"
-#include "TextureManager/TextureManager.h"
+#include "Utils/TextureManager.h"
 #include "Utils/Position.h"
 
 class Square

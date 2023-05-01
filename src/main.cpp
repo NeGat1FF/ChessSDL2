@@ -1,7 +1,9 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "Board/Board.h"
-#include "TextureManager/TextureManager.h"
+#include "Utils/AudioManager.h"
+#include "Utils/TextureManager.h"
 
 
 const int DIVISOR = 8;
@@ -19,7 +21,7 @@ int setWindowSizeSquare(SDL_Window* window, int newSize) {
 
 int main(int argc, char *argv[])
 {
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 
     SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SQUARE_SIZE * 8, SQUARE_SIZE * 8, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
@@ -27,13 +29,17 @@ int main(int argc, char *argv[])
     SDL_Surface *icon = IMG_Load("../assets/icon/icon.ico");
     SDL_SetWindowIcon(window, icon);
 
-    if (!TextureManager::Instance().LoadSVG("../assets/sprites", SQUARE_SIZE, renderer))
-    {
+
+    if(!AudioManager::Instance().LoadSound("../assets/audio")){
+        SDL_Log("Failed to load sound");
+        return 1;
+    }
+    if(!TextureManager::Instance().LoadSVG("../assets/sprites", SQUARE_SIZE, renderer)){
+        SDL_Log("Failed to load sprites");
         return 1;
     }
 
     Board board;
-
     board.InitPieces();
 
     while (true)
@@ -68,6 +74,13 @@ int main(int argc, char *argv[])
                 {
                     // SDL_Log(board.GetFEN().c_str());
                 }
+                if (e.key.keysym.sym == SDLK_r)
+                {
+                    board.InitPieces();
+                }
+                if (e.key.keysym.sym == SDLK_ESCAPE){
+                    break;
+                }
             }
 
             if (e.type == SDL_QUIT)
@@ -79,7 +92,6 @@ int main(int argc, char *argv[])
         board.Draw(renderer);
         SDL_RenderPresent(renderer);
     }
-
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 

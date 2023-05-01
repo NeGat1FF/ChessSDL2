@@ -8,6 +8,7 @@
 #include <SDL2/SDL_render.h>
 
 #include "Utils/Move.h"
+#include "Utils/AudioManager.h"
 #include "Square.h"
 
 // Piece headers

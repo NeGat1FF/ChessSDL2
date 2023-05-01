@@ -32,5 +32,5 @@ private:
     TextureManager(const TextureManager&) = delete;
     TextureManager& operator=(const TextureManager&) = delete;
 
-    std::map<std::string, SDL_Texture*> textures;
+    std::map<std::string, SDL_Texture*> _textures;
 };

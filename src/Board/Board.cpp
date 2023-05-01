@@ -270,6 +270,14 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
     std::shared_ptr<Piece> piece = fromSquare->GetPiece();
     Color color = piece->GetColor();
 
+    if(toSquare->GetPiece())
+    {
+        AudioManager::Instance().PlaySound("capture");
+    }
+    else{
+        AudioManager::Instance().PlaySound("move-self");
+    }
+
     // Update castling availability
     if (piece->GetType() == Type::King)
     {
@@ -354,6 +362,8 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
         rookToSquare->SetPiece(rookFromSquare->GetPiece());
         rookToSquare->GetPiece()->Move();
         rookFromSquare->SetPiece(nullptr);
+
+        AudioManager::Instance().PlaySound("castle");
     }
 
     if (_enPassantSquare && toSquare->GetPosition() == _enPassantSquare->GetPosition())
