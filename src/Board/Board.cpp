@@ -1,14 +1,14 @@
 #include "Board/Board.h"
 
-Board::Board() : _turnColor(Color::White), _halfMoveClock(0), _fullMoveNumber(1)
+Board::Board(unsigned int size) : _turnColor(Color::White), _halfMoveClock(0), _fullMoveNumber(1), _size(size)
 {
     bool isWhite = false;
     for (int x = 0; x < 8; ++x)
     {
         std::vector<std::shared_ptr<Square>> row;
-        for (int y = 7; y >= 0; --y)
+        for (int y = 0; y < 8; ++y)
         {
-            row.push_back(std::make_shared<Square>(x, 7 - y, isWhite));
+            row.push_back(std::make_shared<Square>(x, y, _size, isWhite));
             isWhite = !isWhite;
         }
         this->_board.push_back(row);
@@ -27,6 +27,17 @@ void Board::InitPieces()
     std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     LoadFEN(fen);
+}
+
+void Board::Resize(int size){
+    _size = size;
+    for (auto& row : _board)
+    {
+        for (auto& square : row)
+        {
+            square->Resize(size);
+        }
+    }
 }
 
 const Move &Board::GetLastMove() const
@@ -209,7 +220,7 @@ void Board::LoadFEN(const std::string &fen)
 
 void Board::Click(int x, int y)
 {
-    Position position(x / SQUARE_SIZE, 7 - y / SQUARE_SIZE);
+    Position position(x / _size, 7 - (y / _size));
     auto square = this->_board[position.x][position.y];
 
     if (square->IsSelected())

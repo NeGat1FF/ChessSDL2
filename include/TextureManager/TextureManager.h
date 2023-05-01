@@ -5,6 +5,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <filesystem>
+#include <regex>
+#include <fstream>
 
 class TextureManager {
 public:
@@ -15,6 +17,8 @@ public:
 
     bool Load(const std::string& id, const std::string& filename, SDL_Renderer* renderer);
     bool Load(const std::string& dir, SDL_Renderer* renderer);
+    bool LoadSVG(const std::string& id, const std::string& filename, unsigned int size, SDL_Renderer* renderer);
+    bool LoadSVG(const std::string& dir,unsigned int size, SDL_Renderer* renderer);
 
     void Draw(const std::string& id, int x, int y, int width, int height, SDL_Renderer* renderer, SDL_RendererFlip flip = SDL_FLIP_NONE);
     void Draw(const std::string& id, const SDL_Rect* rect, SDL_Renderer* renderer, SDL_RendererFlip flip = SDL_FLIP_NONE);

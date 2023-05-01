@@ -23,10 +23,11 @@
 class Board
 {
 public:
-    Board();
+    Board(unsigned int size = 64);
 
-    void Draw(SDL_Renderer *renderer);
     void InitPieces();
+    void Resize(int size);
+    void Draw(SDL_Renderer *renderer);
 
     bool IsValidCoordinate(int x, int y) const;
     void MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
@@ -54,6 +55,8 @@ private:
 
     int _halfMoveClock;
     int _fullMoveNumber;
+
+    unsigned int _size;
 
     bool _canWhiteCastleKingside;
     bool _canWhiteCastleQueenside;

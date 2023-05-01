@@ -45,7 +45,7 @@ std::string Piece::ToString() const
         break;
     }
 
-    res += "t45.png";
+    res += "t.svg";
     return res;
 }
 

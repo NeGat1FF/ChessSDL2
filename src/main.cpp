@@ -3,36 +3,75 @@
 #include "Board/Board.h"
 #include "TextureManager/TextureManager.h"
 
-int main(int argc, char *argv[]){
+
+const int DIVISOR = 8;
+
+int SQUARE_SIZE = 64;
+
+int setWindowSizeSquare(SDL_Window* window, int newSize) {
+    if (newSize % DIVISOR != 0) {
+        newSize = (newSize / DIVISOR) * DIVISOR;
+    }
+    SDL_SetWindowSize(window, newSize, newSize);
+
+    return newSize / 8;
+}
+
+int main(int argc, char *argv[])
+{
     SDL_Init(SDL_INIT_VIDEO);
 
-    SDL_Window *window = SDL_CreateWindow("SDL2 Window",SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SQUARE_SIZE * 8, SQUARE_SIZE * 8, SDL_WINDOW_VULKAN);
+    SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SQUARE_SIZE * 8, SQUARE_SIZE * 8, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
 
-    if (!TextureManager::Instance().Load("../assets/sprites", renderer)){
+    SDL_Surface *icon = IMG_Load("../assets/icon/icon.ico");
+    SDL_SetWindowIcon(window, icon);
+
+    if (!TextureManager::Instance().LoadSVG("../assets/sprites", SQUARE_SIZE, renderer))
+    {
         return 1;
     }
-
-    SDL_Surface *icon = IMG_Load("../assets/icon/icon.ico");
-
-    SDL_SetWindowIcon(window, icon);
 
     Board board;
 
     board.InitPieces();
 
-    while(true){
+    while (true)
+    {
         SDL_Event e;
-        if(SDL_PollEvent(&e)){
-            if(e.type == SDL_MOUSEBUTTONDOWN){
+        if (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_MOUSEBUTTONDOWN)
+            {
                 board.Click(e.button.x, e.button.y);
             }
-            if(e.type == SDL_KEYDOWN){
-                if(e.key.keysym.sym == SDLK_SPACE){
+
+            if (e.type == SDL_WINDOWEVENT)
+            {
+                if (e.window.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    int newWidth = e.window.data1;
+                    int newHeight = e.window.data2;
+                    int newSize = std::min(newWidth, newHeight);
+
+                    newSize = setWindowSizeSquare(window, newSize);
+
+                    TextureManager::Instance().Cleanup();
+                    TextureManager::Instance().LoadSVG("../assets/sprites", newSize, renderer);
+
+                    board.Resize(newSize);
+                }
+            }
+            if (e.type == SDL_KEYDOWN)
+            {
+                if (e.key.keysym.sym == SDLK_SPACE)
+                {
                     // SDL_Log(board.GetFEN().c_str());
                 }
             }
-            if(e.type == SDL_QUIT){
+
+            if (e.type == SDL_QUIT)
+            {
                 break;
             }
         }

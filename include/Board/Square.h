@@ -5,12 +5,10 @@
 #include "TextureManager/TextureManager.h"
 #include "Utils/Position.h"
 
-#define SQUARE_SIZE 45
-
 class Square
 {
 public:
-    Square(int x, int y, bool isWhite);
+    Square(int x, int y, unsigned int size, bool isWhite);
 
     SDL_Rect* GetRect();
 
@@ -24,10 +22,13 @@ public:
 
     Position GetPosition() const;
 
+    void Resize(unsigned int size);
+
 private:
     SDL_Rect _rect;
     bool _isSelected;
     Position _position;
     const bool _isWhite;
+    unsigned int _size;
     std::shared_ptr<Piece> _piece;
 };

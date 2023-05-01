@@ -1,11 +1,11 @@
 #include "Board/Square.h"
 
-Square::Square(int x, int y, bool isWhite): _isWhite(isWhite), _isSelected(false)
+Square::Square(int x, int y, unsigned int size, bool isWhite): _isWhite(isWhite), _isSelected(false), _size(size)
 {
-    this->_rect.x = x * SQUARE_SIZE;
-    this->_rect.y = (7 - y) * SQUARE_SIZE;
+    this->_rect.x = x * _size;
+    this->_rect.y = (7 - y) * _size;
 
-    this->_rect.w = this->_rect.h = SQUARE_SIZE;
+    this->_rect.w = this->_rect.h = _size;
 
     this->_piece = nullptr;
 
@@ -16,6 +16,14 @@ Square::Square(int x, int y, bool isWhite): _isWhite(isWhite), _isSelected(false
 SDL_Rect *Square::GetRect()
 {
     return &this->_rect;
+}
+
+void Square::Resize(unsigned int size){
+
+    this->_rect.h = this->_rect.w = this->_size = size;
+
+    this->_rect.x = this->_position.x * _size;
+    this->_rect.y = (7 - this->_position.y) * _size;
 }
 
 void Square::Draw(SDL_Renderer *renderer)
