@@ -9,14 +9,16 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-link_directories(${PROJECT_SOURCE_DIR}/lib)
+if(WIN32)
+    link_directories(${PROJECT_SOURCE_DIR}/lib)
 
-set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2)
+    set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2)
 
-set(SDL2_image_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_image)
-set(SDL2_mixer_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_mixer)
-set(SDL2_ttf_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_ttf)
-set(SDL2_net_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_net)
+    set(SDL2_image_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_image)
+    set(SDL2_mixer_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_mixer)
+    set(SDL2_ttf_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_ttf)
+    set(SDL2_net_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_net)
+endif()
 
 find_package(SDL2 REQUIRED)
 

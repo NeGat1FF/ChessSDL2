@@ -1,7 +1,5 @@
 #include "Utils/AudioManager.h"
 
-#include "SDL_log.h"
-
 bool AudioManager::LoadSound(const std::string& filePath, std::string id){
     Mix_Chunk* chunk = Mix_LoadWAV(filePath.c_str());
 
