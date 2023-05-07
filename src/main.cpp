@@ -36,7 +36,6 @@ void SwitchToGame()
 int main(int argc, char *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
-    SDLNet_Init();
     TTF_Init();
 
     SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
@@ -69,13 +68,6 @@ int main(int argc, char *argv[])
 
     Board board;
     board.InitPieces();
-
-
-    IPaddress ip;
-    SDLNet_ResolveHost(&ip, NULL, 1234);
-
-    UDPsocket socket = SDLNet_UDP_Open(1234);
-    UDPpacket *packet = SDLNet_AllocPacket(1024);
 
     while (true)
     {
