@@ -176,6 +176,13 @@ void Board::LoadFEN(const std::string &fen)
             {
                 auto piece = _getPieceFromFEN(c);
                 _board[columns][7 - rows]->SetPiece(piece);
+                if(piece && piece->GetType() == Type::King){
+                    if(piece->GetColor() == Color::White){
+                        _whiteKingSquare = _board[columns][7 - rows];
+                    }else{
+                        _blackKingSquare = _board[columns][7 - rows];
+                    }
+                }
                 columns++;
             }
         }
@@ -216,6 +223,8 @@ void Board::LoadFEN(const std::string &fen)
     _halfMoveClock = std::stoi(fenComponents[4]);
 
     _fullMoveNumber = std::stoi(fenComponents[5]);
+
+    UpdateCheckStatus();
 }
 
 void Board::Click(int x, int y)
@@ -259,6 +268,8 @@ void Board::SelectPiece(const std::shared_ptr<Square> &square)
 
     auto moves = square->GetPiece()->GetMoves(square->GetPosition(), *this);
 
+    FilterMoves(moves, square, square->GetPiece()->GetColor());
+
     for (auto move : moves)
     {
         move->SetSelected(true);
@@ -285,11 +296,15 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
         {
             _canWhiteCastleKingside = false;
             _canWhiteCastleQueenside = false;
+
+            _whiteKingSquare = toSquare;
         }
         else
         {
             _canBlackCastleKingside = false;
             _canBlackCastleQueenside = false;
+
+            _blackKingSquare = toSquare;
         }
     }
     else if (piece->GetType() == Type::Rook)
@@ -389,6 +404,8 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
         _turnColor = Color::White;
         _fullMoveNumber++;
     }
+
+    UpdateCheckStatus();
 }
 
 std::shared_ptr<Square> Board::GetEnPassantSquare() const
@@ -410,6 +427,10 @@ bool Board::IsTarget(const Position &pos, Color color)
                 {
                     auto king = std::dynamic_pointer_cast<King>(piece);
                     moves = king->GetMovesWithoutChecks(square->GetPosition(), *this);
+                }
+                else if(piece->GetType() == Type::Pawn){
+                    auto pawn = std::dynamic_pointer_cast<Pawn>(piece);
+                    moves = pawn->GetAttackSquares(square->GetPosition(), *this);
                 }
                 else
                 {
@@ -446,6 +467,44 @@ bool Board::IsValidCoordinate(int x, int y) const
     return x >= 0 && x < 8 && y >= 0 && y < 8;
 }
 
+bool Board::IsValidCoordinate(const Position& pos) const{
+    return IsValidCoordinate(pos.x, pos.y);
+}
+
+void Board::FilterMoves(std::vector<std::shared_ptr<Square>>& moves, const std::shared_ptr<Square>& square, Color color){
+    auto piece = square->GetPiece();
+    std::shared_ptr<Square> kingSquare;
+    if(color == Color::White){
+        kingSquare = _whiteKingSquare;
+    }
+    else{
+        kingSquare = _blackKingSquare;
+    }
+    for(auto it = moves.begin(); it != moves.end();){
+        auto move = *it;
+        auto piece = move->GetPiece();
+        VirtualMove(square, move, nullptr);
+        if(IsTarget(kingSquare->GetPosition(), color)){
+            it = moves.erase(it);
+        }
+        else{
+            it++;
+        }
+        VirtualMove(move, square, piece);
+    }
+}
+
+void Board::UpdateCheckStatus(){
+    _isWhiteChecked = IsTarget(_whiteKingSquare->GetPosition(), Color::White);
+    _isBlackChecked = IsTarget(_blackKingSquare->GetPosition(), Color::Black);
+}
+
+void Board::VirtualMove(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare, const std::shared_ptr<Piece>& piece){
+    auto _piece = fromSquare->GetPiece();
+    toSquare->SetPiece(_piece);
+    fromSquare->SetPiece(piece);
+}
+
 std::shared_ptr<Square> Board::GetSquare(int x, int y)
 {
     if (x < 0 || x > 7 || y < 0 || y > 7)
@@ -453,6 +512,10 @@ std::shared_ptr<Square> Board::GetSquare(int x, int y)
         return nullptr;
     }
     return this->_board[x][y];
+}
+
+std::shared_ptr<Square> Board::GetSquare(const Position& pos){
+    return GetSquare(pos.x, pos.y);
 }
 
 void Board::Draw(SDL_Renderer *renderer)

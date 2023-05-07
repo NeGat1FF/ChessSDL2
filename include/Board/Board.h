@@ -31,18 +31,25 @@ public:
     void Draw(SDL_Renderer *renderer);
 
     bool IsValidCoordinate(int x, int y) const;
+    bool IsValidCoordinate(const Position& pos) const;
     void MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
     void SelectPiece(const std::shared_ptr<Square>& square);
 
     std::shared_ptr<Square> GetSquare(int x, int y);
+    std::shared_ptr<Square> GetSquare(const Position& pos);
     void Click(int x, int y);
     const Move& GetLastMove() const;
+
+    void FilterMoves(std::vector<std::shared_ptr<Square>>& moves, const std::shared_ptr<Square>& square, Color color);
+    void VirtualMove(const std::shared_ptr<Square>& fromSquare,const std::shared_ptr<Square>& toSquare, const std::shared_ptr<Piece>& piece);
 
     void LoadFEN(const std::string& fen);
     bool IsTarget(const Position& pos, Color color);
 
     std::shared_ptr<Square> GetEnPassantSquare() const;
     std::string GetFEN() const;
+
+    void UpdateCheckStatus();
 
 
 private:
@@ -64,6 +71,12 @@ private:
 
     bool _canBlackCastleKingside;
     bool _canBlackCastleQueenside;
+
+    bool _isWhiteChecked;
+    bool _isBlackChecked;
+
+    std::shared_ptr<Square> _whiteKingSquare;
+    std::shared_ptr<Square> _blackKingSquare;
 
     std::shared_ptr<Square> _selectedSquare;
     std::shared_ptr<Square> _enPassantSquare;

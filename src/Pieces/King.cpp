@@ -8,16 +8,11 @@ std::vector<std::shared_ptr<Square>> King::GetMoves(Position pos, Board &board) 
 {
     std::vector<std::shared_ptr<Square>> moves = GetMovesWithoutChecks(pos, board);
 
-    for (int i = 0; i < moves.size(); ++i)
-    {
-        if (board.IsTarget(moves[i]->GetPosition(), GetColor()))
-        {
-            moves.erase(moves.begin() + i);
-            --i;
-        }
-    }
+    moves.erase(std::remove_if(moves.begin(), moves.end(), [&](const std::shared_ptr<Square>& sq) {
+        return board.IsTarget(sq->GetPosition(), GetColor());
+    }), moves.end());
 
-    // Add castling moves if the king hasn't moved
+    // Add castling moves if the king hasn't moved 
     if (!HasMoved())
     {
         // King-side castling

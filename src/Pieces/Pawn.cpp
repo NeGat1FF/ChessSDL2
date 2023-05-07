@@ -90,6 +90,35 @@ std::vector<std::shared_ptr<Square>> Pawn::GetMoves(Position pos, Board &board) 
     return moves;
 }
 
+std::vector<std::shared_ptr<Square>> Pawn::GetAttackSquares(Position pos, Board &board) const {
+    std::vector<std::shared_ptr<Square>> moves;
+
+    if (GetColor() == Color::White) {
+        Position leftAttack(pos.x - 1, pos.y + 1);
+        Position rightAttack(pos.x + 1, pos.y + 1);
+
+        if (board.IsValidCoordinate(leftAttack)) {
+            moves.push_back(board.GetSquare(leftAttack));
+        }
+        if (board.IsValidCoordinate(rightAttack)) {
+            moves.push_back(board.GetSquare(rightAttack));
+        }
+    } else {
+        Position leftAttack(pos.x - 1, pos.y - 1);
+        Position rightAttack(pos.x + 1, pos.y - 1);
+
+        if (board.IsValidCoordinate(leftAttack)) {
+            moves.push_back(board.GetSquare(leftAttack));
+        }
+        if (board.IsValidCoordinate(rightAttack)) {
+            moves.push_back(board.GetSquare(rightAttack));
+        }
+    }
+
+    return moves;
+}
+
+
 char Pawn::GetFEN() const
 {
     return GetColor() == Color::White ? 'P' : 'p';
