@@ -74,4 +74,4 @@ public:
         }
         return true;
     }
-    
+};
