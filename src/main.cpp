@@ -8,6 +8,7 @@
 
 #include "GUI/Layout.h"
 
+#include <iostream>
 #include <cmath>
 
 int SQUARE_SIZE = 64;
@@ -26,17 +27,12 @@ int setWindowSizeSquare(SDL_Window *window, int newSize)
     return newSize / 8;
 }
 
-bool inMenu = true;
-
-void SwitchToGame()
-{
-    inMenu = false;
-}
-
 int main(int argc, char *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     TTF_Init();
+
+    bool inMenu = true;
 
     SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -62,12 +58,16 @@ int main(int argc, char *argv[])
 
     TTF_Font *font = TTF_OpenFont("../assets/fonts/OpenSans-Regular.ttf", 30);
 
-    layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Singleplayer", SwitchToGame, font, renderer));
+    layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Singleplayer", [&inMenu](){inMenu = false;}, font, renderer));
     layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Multiplayer", nullptr, font, renderer));
     layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Quit", SDL_Quit, font, renderer));
 
-    Board board;
+    bool isPlayerWhite = false;
+
+    Board board(isPlayerWhite);
     board.InitPieces();
+
+    SDL_Texture* targetTexture;
 
     while (true)
     {
@@ -124,15 +124,29 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+
+        if(!isPlayerWhite){
+            targetTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WINDOW_WIDTH, WINDOW_HEIGHT);
+            SDL_SetRenderTarget(renderer, targetTexture);
+        }
+
         board.Draw(renderer);
+
+        if(!isPlayerWhite){
+            SDL_SetRenderTarget(renderer, NULL);
+            SDL_RenderCopyEx(renderer, targetTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
+        }
+
         if (inMenu)
         {
             layout.Draw();
         }
+
         SDL_RenderPresent(renderer);
     }
     TTF_CloseFont(font);
     TTF_CloseFont(logoFont);
+    SDL_DestroyTexture(targetTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 

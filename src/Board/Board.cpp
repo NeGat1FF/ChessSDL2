@@ -1,7 +1,11 @@
 #include "Board/Board.h"
 
-Board::Board(unsigned int size) : _turnColor(Color::White), _halfMoveClock(0), _fullMoveNumber(1), _size(size)
+#include <iostream>
+
+Board::Board(bool isPlayerWhite, unsigned int size) : _turnColor(isPlayerWhite ? Color::White : Color::Black), _halfMoveClock(0), _fullMoveNumber(1), _size(size)
 {
+    _isPlayerWhite = isPlayerWhite;
+
     bool isWhite = false;
     for (int x = 0; x < 8; ++x)
     {
@@ -229,7 +233,15 @@ void Board::LoadFEN(const std::string &fen)
 
 void Board::Click(int x, int y)
 {
-    Position position(x / _size, 7 - (y / _size));
+    Position position;
+
+    if(_isPlayerWhite){
+        position = Position(x / _size, 7 - (y / _size));
+    }
+    else{
+        position = Position(7 - (x / _size), y / _size);
+    }
+
     auto square = this->_board[position.x][position.y];
 
     if (square->IsSelected())
@@ -274,6 +286,11 @@ void Board::SelectPiece(const std::shared_ptr<Square> &square)
     {
         move->SetSelected(true);
     }
+}
+
+bool Board::IsPlayerWhite() const
+{
+    return _isPlayerWhite;
 }
 
 void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
@@ -524,7 +541,7 @@ void Board::Draw(SDL_Renderer *renderer)
     {
         for (auto square : row)
         {
-            square->Draw(renderer);
+            square->Draw(renderer, _isPlayerWhite);
         }
     }
 }

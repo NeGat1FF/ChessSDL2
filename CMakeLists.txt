@@ -18,6 +18,8 @@ if(WIN32)
     set(SDL2_mixer_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_mixer)
     set(SDL2_ttf_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_ttf)
     set(SDL2_net_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_net)
+
+    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -mconsole)
 endif()
 
 find_package(SDL2 REQUIRED)

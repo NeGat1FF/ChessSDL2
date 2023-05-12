@@ -84,5 +84,6 @@
         "bitset": "cpp",
         "regex": "cpp",
         "fstream": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

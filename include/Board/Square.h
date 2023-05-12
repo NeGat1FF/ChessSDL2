@@ -12,7 +12,7 @@ public:
 
     SDL_Rect* GetRect();
 
-    void Draw(SDL_Renderer *renderer);
+    void Draw(SDL_Renderer *renderer, bool isPlayerWhite);
 
     std::shared_ptr<Piece> GetPiece() const;
     void SetPiece(const std::shared_ptr<Piece>& piece);

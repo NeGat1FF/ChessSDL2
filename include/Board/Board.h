@@ -24,7 +24,7 @@
 class Board
 {
 public:
-    Board(unsigned int size = 64);
+    Board(bool isPlayerWhite = true, unsigned int size = 64);
 
     void InitPieces();
     void Resize(int size);
@@ -45,6 +45,7 @@ public:
 
     void LoadFEN(const std::string& fen);
     bool IsTarget(const Position& pos, Color color);
+    bool IsPlayerWhite() const;
 
     std::shared_ptr<Square> GetEnPassantSquare() const;
     std::string GetFEN() const;
@@ -74,6 +75,8 @@ private:
 
     bool _isWhiteChecked;
     bool _isBlackChecked;
+
+    bool _isPlayerWhite;
 
     std::shared_ptr<Square> _whiteKingSquare;
     std::shared_ptr<Square> _blackKingSquare;

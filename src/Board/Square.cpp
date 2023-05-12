@@ -26,7 +26,7 @@ void Square::Resize(unsigned int size){
     this->_rect.y = (7 - this->_position.y) * _size;
 }
 
-void Square::Draw(SDL_Renderer *renderer)
+void Square::Draw(SDL_Renderer *renderer, bool isPlayerWhite)
 {
     if (_isSelected)
     {
@@ -53,7 +53,12 @@ void Square::Draw(SDL_Renderer *renderer)
 
     if (this->_piece)
     {
-        TextureManager::Instance().Draw(this->_piece->ToString(), &this->_rect, renderer);
+        if(isPlayerWhite){
+            TextureManager::Instance().Draw(this->_piece->ToString(), &this->_rect, renderer);
+        }
+        else{
+            TextureManager::Instance().Draw(this->_piece->ToString(), &this->_rect, renderer, SDL_FLIP_VERTICAL);
+        }
     }
 }
 
