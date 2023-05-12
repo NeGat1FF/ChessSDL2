@@ -33,11 +33,12 @@ void Board::InitPieces()
     LoadFEN(fen);
 }
 
-void Board::Resize(int size){
+void Board::Resize(int size)
+{
     _size = size;
-    for (auto& row : _board)
+    for (auto &row : _board)
     {
-        for (auto& square : row)
+        for (auto &square : row)
         {
             square->Resize(size);
         }
@@ -180,10 +181,14 @@ void Board::LoadFEN(const std::string &fen)
             {
                 auto piece = _getPieceFromFEN(c);
                 _board[columns][7 - rows]->SetPiece(piece);
-                if(piece && piece->GetType() == Type::King){
-                    if(piece->GetColor() == Color::White){
+                if (piece && piece->GetType() == Type::King)
+                {
+                    if (piece->GetColor() == Color::White)
+                    {
                         _whiteKingSquare = _board[columns][7 - rows];
-                    }else{
+                    }
+                    else
+                    {
                         _blackKingSquare = _board[columns][7 - rows];
                     }
                 }
@@ -231,46 +236,57 @@ void Board::LoadFEN(const std::string &fen)
     UpdateCheckStatus();
 }
 
-void Board::Click(int x, int y)
+std::string Board::Click(int x, int y)
 {
     Position position;
 
-    if(_isPlayerWhite){
-        position = Position(x / _size, 7 - (y / _size));
-    }
-    else{
-        position = Position(7 - (x / _size), y / _size);
-    }
+    Move move;
 
-    auto square = this->_board[position.x][position.y];
-
-    if (square->IsSelected())
+    if ((_isPlayerWhite && _turnColor == Color::White) || (!_isPlayerWhite && _turnColor == Color::Black))
     {
-        if (_selectedSquare && _selectedSquare != square)
+        if (_isPlayerWhite)
         {
-            MovePiece(_selectedSquare, square);
+            position = Position(x / _size, 7 - (y / _size));
         }
-        _unselectAll();
-        return;
-    }
-    else
-    {
-        if (square->GetPiece())
+        else
         {
-            auto piece = square->GetPiece();
-            if (piece->GetColor() == _turnColor)
+            position = Position(7 - (x / _size), y / _size);
+        }
+
+        auto square = this->_board[position.x][position.y];
+
+        if (square->IsSelected())
+        {
+            if (_selectedSquare && _selectedSquare != square)
             {
-                if(_selectedSquare)
-                {
-                    _unselectAll();
-                }
-                SelectPiece(square);
+                MovePiece(_selectedSquare, square);
+                move._from = _selectedSquare->GetPosition();
+                move._to = square->GetPosition();
             }
-        }
-        else{
             _unselectAll();
         }
+        else
+        {
+            if (square->GetPiece())
+            {
+                auto piece = square->GetPiece();
+                if (piece->GetColor() == _turnColor)
+                {
+                    if (_selectedSquare)
+                    {
+                        _unselectAll();
+                    }
+                    SelectPiece(square);
+                }
+            }
+            else
+            {
+                _unselectAll();
+            }
+        }
     }
+
+    return move._from.ToString() + move._to.ToString();
 }
 
 void Board::SelectPiece(const std::shared_ptr<Square> &square)
@@ -293,16 +309,25 @@ bool Board::IsPlayerWhite() const
     return _isPlayerWhite;
 }
 
+void Board::MovePiece(std::string from, std::string to)
+{
+    Position fromPosition(from);
+    Position toPosition(to);
+
+    MovePiece(_board[fromPosition.x][fromPosition.y], _board[toPosition.x][toPosition.y]);
+}
+
 void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
 {
     std::shared_ptr<Piece> piece = fromSquare->GetPiece();
     Color color = piece->GetColor();
 
-    if(toSquare->GetPiece())
+    if (toSquare->GetPiece())
     {
         AudioManager::Instance().PlaySound("capture");
     }
-    else{
+    else
+    {
         AudioManager::Instance().PlaySound("move-self");
     }
 
@@ -445,7 +470,8 @@ bool Board::IsTarget(const Position &pos, Color color)
                     auto king = std::dynamic_pointer_cast<King>(piece);
                     moves = king->GetMovesWithoutChecks(square->GetPosition(), *this);
                 }
-                else if(piece->GetType() == Type::Pawn){
+                else if (piece->GetType() == Type::Pawn)
+                {
                     auto pawn = std::dynamic_pointer_cast<Pawn>(piece);
                     moves = pawn->GetAttackSquares(square->GetPosition(), *this);
                 }
@@ -484,39 +510,48 @@ bool Board::IsValidCoordinate(int x, int y) const
     return x >= 0 && x < 8 && y >= 0 && y < 8;
 }
 
-bool Board::IsValidCoordinate(const Position& pos) const{
+bool Board::IsValidCoordinate(const Position &pos) const
+{
     return IsValidCoordinate(pos.x, pos.y);
 }
 
-void Board::FilterMoves(std::vector<std::shared_ptr<Square>>& moves, const std::shared_ptr<Square>& square, Color color){
+void Board::FilterMoves(std::vector<std::shared_ptr<Square>> &moves, const std::shared_ptr<Square> &square, Color color)
+{
     auto piece = square->GetPiece();
     std::shared_ptr<Square> kingSquare;
-    if(color == Color::White){
+    if (color == Color::White)
+    {
         kingSquare = _whiteKingSquare;
     }
-    else{
+    else
+    {
         kingSquare = _blackKingSquare;
     }
-    for(auto it = moves.begin(); it != moves.end();){
+    for (auto it = moves.begin(); it != moves.end();)
+    {
         auto move = *it;
         auto piece = move->GetPiece();
         VirtualMove(square, move, nullptr);
-        if(IsTarget(kingSquare->GetPosition(), color)){
+        if (IsTarget(kingSquare->GetPosition(), color))
+        {
             it = moves.erase(it);
         }
-        else{
+        else
+        {
             it++;
         }
         VirtualMove(move, square, piece);
     }
 }
 
-void Board::UpdateCheckStatus(){
+void Board::UpdateCheckStatus()
+{
     _isWhiteChecked = IsTarget(_whiteKingSquare->GetPosition(), Color::White);
     _isBlackChecked = IsTarget(_blackKingSquare->GetPosition(), Color::Black);
 }
 
-void Board::VirtualMove(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare, const std::shared_ptr<Piece>& piece){
+void Board::VirtualMove(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare, const std::shared_ptr<Piece> &piece)
+{
     auto _piece = fromSquare->GetPiece();
     toSquare->SetPiece(_piece);
     fromSquare->SetPiece(piece);
@@ -531,7 +566,8 @@ std::shared_ptr<Square> Board::GetSquare(int x, int y)
     return this->_board[x][y];
 }
 
-std::shared_ptr<Square> Board::GetSquare(const Position& pos){
+std::shared_ptr<Square> Board::GetSquare(const Position &pos)
+{
     return GetSquare(pos.x, pos.y);
 }
 

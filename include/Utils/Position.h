@@ -18,6 +18,8 @@ struct Position
 
     std::string ToString() const
     {
+        if(x == -1 || y == -1)
+            return "None";
         return std::string(1, x + 'a') + std::string(1, y + '1');
     }
 };

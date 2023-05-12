@@ -33,11 +33,12 @@ public:
     bool IsValidCoordinate(int x, int y) const;
     bool IsValidCoordinate(const Position& pos) const;
     void MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
+    void MovePiece(std::string from, std::string to);
     void SelectPiece(const std::shared_ptr<Square>& square);
 
     std::shared_ptr<Square> GetSquare(int x, int y);
     std::shared_ptr<Square> GetSquare(const Position& pos);
-    void Click(int x, int y);
+    std::string Click(int x, int y);
     const Move& GetLastMove() const;
 
     void FilterMoves(std::vector<std::shared_ptr<Square>>& moves, const std::shared_ptr<Square>& square, Color color);

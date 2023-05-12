@@ -5,11 +5,13 @@
 #include "Board/Board.h"
 #include "Utils/AudioManager.h"
 #include "Utils/TextureManager.h"
+#include "Utils/NetworkManager.h"
 
 #include "GUI/Layout.h"
 
 #include <iostream>
 #include <cmath>
+#include <thread>
 
 int SQUARE_SIZE = 64;
 
@@ -27,10 +29,29 @@ int setWindowSizeSquare(SDL_Window *window, int newSize)
     return newSize / 8;
 }
 
+void NetworkThread(Board &board)
+{
+    while(true){
+        char data[32];
+        NetworkManager::Instance().ReceiveTCP(data, 32);
+        std::string from;
+        from += data[0];
+        from += data[1];
+
+        std::string to;
+        to += data[2];
+        to += data[3];
+
+        board.MovePiece(from, to);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     TTF_Init();
+
+    NetworkManager::Instance().Init();
 
     bool inMenu = true;
 
@@ -38,25 +59,25 @@ int main(int argc, char *argv[])
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    SDL_Surface *icon = IMG_Load("../assets/icon/icon.ico");
+    SDL_Surface *icon = IMG_Load("assets/icon/icon.ico");
     SDL_SetWindowIcon(window, icon);
 
-    if (!AudioManager::Instance().LoadSound("../assets/audio"))
+    if (!AudioManager::Instance().LoadSound("assets/audio"))
     {
         SDL_Log("Failed to load sound");
         return 1;
     }
-    if (!TextureManager::Instance().LoadSVG("../assets/sprites", SQUARE_SIZE, renderer))
+    if (!TextureManager::Instance().LoadSVG("assets/sprites", SQUARE_SIZE, renderer))
     {
         SDL_Log("Failed to load sprites");
         return 1;
     }
 
-    TTF_Font *logoFont = TTF_OpenFont("../assets/fonts/OpenSans-Regular.ttf", 64);
+    TTF_Font *logoFont = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 64);
 
     Layout layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "ChessGame", {0, 0, 0, 200}, renderer);
 
-    TTF_Font *font = TTF_OpenFont("../assets/fonts/OpenSans-Regular.ttf", 30);
+    TTF_Font *font = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 30);
 
     layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Singleplayer", [&inMenu](){inMenu = false;}, font, renderer));
     layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Multiplayer", nullptr, font, renderer));
@@ -64,8 +85,34 @@ int main(int argc, char *argv[])
 
     bool isPlayerWhite = false;
 
+    if(argc > 1){
+        if(strcmp(argv[1], "host") == 0){
+            NetworkManager::Instance().ResolveHost(nullptr, 1234);
+            NetworkManager::Instance().OpenTCPSocket();
+            NetworkManager::Instance().AcceptTCP();
+            char data[32];
+            NetworkManager::Instance().ReceiveTCP(data, 32);
+            std::cout << data << std::endl;
+            NetworkManager::Instance().SendTCP("Server Connected", 32);
+
+            isPlayerWhite = true;
+        }
+        else if(strcmp(argv[1], "join") == 0){
+            NetworkManager::Instance().ResolveHost(argv[2], 1234);
+            NetworkManager::Instance().OpenTCPSocket();
+            NetworkManager::Instance().SendTCP("Client Connected", 32);
+            char data[32];
+            NetworkManager::Instance().ReceiveTCP(data, 32);
+            std::cout << data << std::endl;
+        }
+
+    }
+
     Board board(isPlayerWhite);
     board.InitPieces();
+
+    std::thread networkThread(NetworkThread, std::ref(board));
+    networkThread.detach();
 
     SDL_Texture* targetTexture;
 
@@ -84,7 +131,11 @@ int main(int argc, char *argv[])
                 {
                     if (!inMenu)
                     {
-                        board.Click(e.button.x, e.button.y);
+                        std::string move = board.Click(e.button.x, e.button.y);
+
+                        if(move != "NoneNone"){
+                            NetworkManager::Instance().SendTCP(move.c_str(), 32);
+                        }
                     }
                 }
             }
@@ -149,6 +200,7 @@ int main(int argc, char *argv[])
     SDL_DestroyTexture(targetTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    SDL_Quit();
 
     return 0;
 }
