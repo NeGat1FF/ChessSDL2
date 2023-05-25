@@ -83,6 +83,9 @@
         "semaphore": "cpp",
         "bitset": "cpp",
         "regex": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "xhash": "cpp",
+        "span": "cpp",
+        "variant": "cpp"
     }
 }
