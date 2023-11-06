@@ -61,6 +61,8 @@ void Layout::ProcessInput(SDL_Event &event)
             }
         }
     }
+
+    Draw();
 }
 
 std::string Layout::GetText()
@@ -99,6 +101,8 @@ void Layout::Draw()
     {
         element->Draw();
     }
+
+    SDL_RenderPresent(_renderer);
 }
 
 void Layout::_updateTextRect()

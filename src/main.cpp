@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    Board* board = new Board;
+    Board* board = new Board(renderer);
 
     std::thread* networkThread = nullptr;
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &joinLayout]{currentLayout = joinLayout;}, font, renderer));
 
     joinLayout->AddElement(std::make_unique<Input>(SDL_Color(32, 32, 32, 255), "", font, renderer));
-    joinLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &isPlayerWhite, &networkThread]{isPlayerWhite = false; std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(Color::Black); joinNetwork(ip.c_str()); createNetworkThread(networkThread, board);}, font, renderer));
+    joinLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &isPlayerWhite, &networkThread, &renderer]{isPlayerWhite = false; std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(renderer, Color::Black); joinNetwork(ip.c_str()); createNetworkThread(networkThread, board);}, font, renderer));
 
     currentLayout = mainLayout;
 
@@ -191,23 +191,19 @@ int main(int argc, char *argv[])
             }
         }
 
-        if(!isPlayerWhite){
-            targetTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WINDOW_WIDTH, WINDOW_HEIGHT);
-            SDL_SetRenderTarget(renderer, targetTexture);
-        }
+        // if(!isPlayerWhite){
+        //     targetTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WINDOW_WIDTH, WINDOW_HEIGHT);
+        //     SDL_SetRenderTarget(renderer, targetTexture);
+        // }
 
-        board->Draw(renderer);
+        // if(!isPlayerWhite){
+        //     SDL_SetRenderTarget(renderer, NULL);
+        //     SDL_RenderCopyEx(renderer, targetTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
+        // }
 
-        if(!isPlayerWhite){
-            SDL_SetRenderTarget(renderer, NULL);
-            SDL_RenderCopyEx(renderer, targetTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
-        }
-
-        if(currentLayout != nullptr){
-            currentLayout->Draw();
-        }
-
-        SDL_RenderPresent(renderer);
+        // if(!isPlayerWhite){
+        //     SDL_DestroyTexture(targetTexture);
+        // }
     }
     delete mainLayout;
     delete multiplayerLayout;

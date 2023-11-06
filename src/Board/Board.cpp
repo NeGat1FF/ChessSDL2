@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Board::Board(Color playerColor, unsigned int size, std::string fen) : _playerColor(playerColor), _size(size)
+Board::Board(SDL_Renderer* renderer, Color playerColor, unsigned int size, std::string fen) : _renderer(renderer), _playerColor(playerColor), _size(size)
 {
     bool isWhite = false;
     for (int x = 0; x < 8; ++x)
@@ -18,6 +18,8 @@ Board::Board(Color playerColor, unsigned int size, std::string fen) : _playerCol
     }
 
     LoadFEN(fen);
+
+    Draw();
 }
 
 void Board::Resize(int size)
@@ -30,6 +32,8 @@ void Board::Resize(int size)
             square->Resize(size);
         }
     }
+
+    Draw();
 }
 
 const Move &Board::GetLastMove() const
@@ -273,6 +277,8 @@ std::string Board::Click(int x, int y)
         }
     }
 
+    Draw();
+
     return move._from.ToString() + move._to.ToString();
 }
 
@@ -297,6 +303,8 @@ void Board::MovePiece(std::string from, std::string to)
     Position toPosition(to);
 
     MovePiece(_board[fromPosition.x][fromPosition.y], _board[toPosition.x][toPosition.y]);
+
+    Draw();
 }
 
 void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
@@ -553,13 +561,32 @@ std::shared_ptr<Square> Board::GetSquare(const Position &pos)
     return GetSquare(pos.x, pos.y);
 }
 
-void Board::Draw(SDL_Renderer *renderer)
+void Board::Draw()
 {
+    SDL_Texture* boardTexture;
+    if(_playerColor == Color::Black){
+        boardTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 8 * _size, 8 * _size);
+        SDL_SetRenderTarget(_renderer, boardTexture);
+    }
+
     for (auto row : this->_board)
     {
         for (auto square : row)
         {
-            square->Draw(renderer, _playerColor == Color::White);
+            square->Draw(_renderer, _playerColor == Color::White);
         }
+    }
+
+
+    if(_playerColor == Color::Black){
+        SDL_SetRenderTarget(_renderer, NULL);
+        SDL_RenderCopyEx(_renderer, boardTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
+    }
+    
+
+    SDL_RenderPresent(_renderer);
+
+    if(_playerColor == Color::Black){
+        SDL_DestroyTexture(boardTexture);
     }
 }

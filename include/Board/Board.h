@@ -24,10 +24,10 @@
 class Board
 {
 public:
-    Board(Color playerColor = Color::White, unsigned int size = 64, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    Board(SDL_Renderer* renderer, Color playerColor = Color::White, unsigned int size = 64, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     void Resize(int size);
-    void Draw(SDL_Renderer *renderer);
+    void Draw();
 
     bool IsValidCoordinate(int x, int y) const;
     bool IsValidCoordinate(const Position& pos) const;
@@ -76,6 +76,7 @@ private:
     bool _isWhiteChecked;
     bool _isBlackChecked;
 
+    SDL_Renderer *_renderer;
 
     std::shared_ptr<Square> _whiteKingSquare;
     std::shared_ptr<Square> _blackKingSquare;
