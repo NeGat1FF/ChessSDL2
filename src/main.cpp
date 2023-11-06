@@ -29,7 +29,7 @@ int setWindowSizeSquare(SDL_Window *window, int newSize)
     return newSize / 8;
 }
 
-void NetworkThread(Board &board)
+void NetworkThread(Board* &board)
 {
     while(true){
         char data[32];
@@ -42,9 +42,34 @@ void NetworkThread(Board &board)
         to += data[2];
         to += data[3];
 
-        board.MovePiece(from, to);
+        board->MovePiece(from, to);
     }
 }
+
+void hostNetwork() {
+    NetworkManager::Instance().ResolveHost(nullptr, 1234);
+    NetworkManager::Instance().OpenTCPSocket();
+    NetworkManager::Instance().AcceptTCP();
+    char data[32];
+    NetworkManager::Instance().ReceiveTCP(data, 32);
+    std::cout << data << std::endl;
+    NetworkManager::Instance().SendTCP("Server Connected", 32);
+}
+
+void joinNetwork(const char* host) {
+    NetworkManager::Instance().ResolveHost(host, 1234);
+    NetworkManager::Instance().OpenTCPSocket();
+    NetworkManager::Instance().SendTCP("Client Connected", 32);
+    char data[32];
+    NetworkManager::Instance().ReceiveTCP(data, 32);
+    std::cout << data << std::endl;
+}
+
+void createNetworkThread(std::thread* thread, Board* &board){
+    thread = new std::thread(NetworkThread, std::ref(board));
+    thread->detach();
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -53,7 +78,7 @@ int main(int argc, char *argv[])
 
     NetworkManager::Instance().Init();
 
-    bool inMenu = true;
+    bool isPlayerWhite = true;
 
     SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -73,46 +98,31 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    Board* board = new Board;
+
+    std::thread* networkThread = nullptr;
+
+    Layout* currentLayout = nullptr;
+
     TTF_Font *logoFont = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 64);
 
-    Layout layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "ChessGame", {0, 0, 0, 200}, renderer);
+    Layout* mainLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "ChessGame", {0, 0, 0, 200}, renderer);
+    Layout* multiplayerLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "Multiplayer", {0, 0, 0, 200}, renderer);
+    Layout* joinLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "Join", {0, 0, 0, 200}, renderer);
 
     TTF_Font *font = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 30);
 
-    layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Singleplayer", [&inMenu](){inMenu = false;}, font, renderer));
-    layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Multiplayer", nullptr, font, renderer));
-    layout.AddButton(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), SDL_Color(255, 0, 0, 255), "Quit", SDL_Quit, font, renderer));
+    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Singleplayer", [&currentLayout]{currentLayout = nullptr;}, font, renderer));
+    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Multiplayer", [&currentLayout, &multiplayerLayout]{currentLayout = multiplayerLayout;}, font, renderer));
+    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Quit", SDL_Quit, font, renderer));
 
-    bool isPlayerWhite = false;
+    multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]{currentLayout = nullptr; createNetworkThread(networkThread, board);hostNetwork();}, font, renderer));
+    multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &joinLayout]{currentLayout = joinLayout;}, font, renderer));
 
-    if(argc > 1){
-        if(strcmp(argv[1], "host") == 0){
-            NetworkManager::Instance().ResolveHost(nullptr, 1234);
-            NetworkManager::Instance().OpenTCPSocket();
-            NetworkManager::Instance().AcceptTCP();
-            char data[32];
-            NetworkManager::Instance().ReceiveTCP(data, 32);
-            std::cout << data << std::endl;
-            NetworkManager::Instance().SendTCP("Server Connected", 32);
+    joinLayout->AddElement(std::make_unique<Input>(SDL_Color(32, 32, 32, 255), "", font, renderer));
+    joinLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &isPlayerWhite, &networkThread]{isPlayerWhite = false; std::string ip = currentLayout->GetText(); currentLayout = nullptr; createNetworkThread(networkThread, board); board = new Board(Color::Black); joinNetwork(ip.c_str());}, font, renderer));
 
-            isPlayerWhite = true;
-        }
-        else if(strcmp(argv[1], "join") == 0){
-            NetworkManager::Instance().ResolveHost(argv[2], 1234);
-            NetworkManager::Instance().OpenTCPSocket();
-            NetworkManager::Instance().SendTCP("Client Connected", 32);
-            char data[32];
-            NetworkManager::Instance().ReceiveTCP(data, 32);
-            std::cout << data << std::endl;
-        }
-
-    }
-
-    Board board(isPlayerWhite);
-    board.InitPieces();
-
-    std::thread networkThread(NetworkThread, std::ref(board));
-    networkThread.detach();
+    currentLayout = mainLayout;
 
     SDL_Texture* targetTexture;
 
@@ -121,17 +131,16 @@ int main(int argc, char *argv[])
         SDL_Event e;
         if (SDL_PollEvent(&e))
         {
-            if (inMenu)
-            {
-                layout.ProcessInput(e);
+            if(currentLayout != nullptr){
+                currentLayout->ProcessInput(e);
             }
             if (e.type == SDL_MOUSEBUTTONDOWN)
             {
                 if (e.button.button == SDL_BUTTON_LEFT)
                 {
-                    if (!inMenu)
+                    if (!currentLayout)
                     {
-                        std::string move = board.Click(e.button.x, e.button.y);
+                        std::string move = board->Click(e.button.x, e.button.y);
 
                         if(move != "NoneNone"){
                             NetworkManager::Instance().SendTCP(move.c_str(), 32);
@@ -154,20 +163,26 @@ int main(int argc, char *argv[])
 
                     WINDOW_WIDTH = WINDOW_HEIGHT = SQUARE_SIZE * 8;
 
-                    layout.Resize(WINDOW_WIDTH, WINDOW_HEIGHT);
+                    mainLayout->Resize(WINDOW_WIDTH, WINDOW_HEIGHT);
+                    multiplayerLayout->Resize(WINDOW_WIDTH, WINDOW_HEIGHT);
+                    joinLayout->Resize(WINDOW_WIDTH, WINDOW_HEIGHT);
 
-                    board.Resize(SQUARE_SIZE);
+                    board->Resize(SQUARE_SIZE);
                 }
             }
             if (e.type == SDL_KEYDOWN)
             {
                 if (e.key.keysym.sym == SDLK_r)
                 {
-                    board.InitPieces();
                 }
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                 {
-                    inMenu = !inMenu;
+                    if(currentLayout){
+                        currentLayout = nullptr;
+                    }
+                    else{
+                        currentLayout = mainLayout;
+                    }
                 }
             }
             if (e.type == SDL_QUIT)
@@ -181,23 +196,27 @@ int main(int argc, char *argv[])
             SDL_SetRenderTarget(renderer, targetTexture);
         }
 
-        board.Draw(renderer);
+        board->Draw(renderer);
 
         if(!isPlayerWhite){
             SDL_SetRenderTarget(renderer, NULL);
             SDL_RenderCopyEx(renderer, targetTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
         }
 
-        if (inMenu)
-        {
-            layout.Draw();
+        if(currentLayout != nullptr){
+            currentLayout->Draw();
         }
 
         SDL_RenderPresent(renderer);
     }
+    delete mainLayout;
+    delete multiplayerLayout;
+    delete joinLayout;
     TTF_CloseFont(font);
     TTF_CloseFont(logoFont);
-    SDL_DestroyTexture(targetTexture);
+    if(!isPlayerWhite){
+        SDL_DestroyTexture(targetTexture);
+    }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

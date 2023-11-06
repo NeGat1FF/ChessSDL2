@@ -2,10 +2,8 @@
 
 #include <iostream>
 
-Board::Board(bool isPlayerWhite, unsigned int size) : _turnColor(isPlayerWhite ? Color::White : Color::Black), _halfMoveClock(0), _fullMoveNumber(1), _size(size)
+Board::Board(Color playerColor, unsigned int size, std::string fen) : _playerColor(playerColor), _size(size)
 {
-    _isPlayerWhite = isPlayerWhite;
-
     bool isWhite = false;
     for (int x = 0; x < 8; ++x)
     {
@@ -18,17 +16,6 @@ Board::Board(bool isPlayerWhite, unsigned int size) : _turnColor(isPlayerWhite ?
         this->_board.push_back(row);
         isWhite = !isWhite;
     }
-
-    _canWhiteCastleKingside = true;
-    _canWhiteCastleQueenside = true;
-
-    _canBlackCastleKingside = true;
-    _canBlackCastleQueenside = true;
-}
-
-void Board::InitPieces()
-{
-    std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
     LoadFEN(fen);
 }
@@ -242,9 +229,9 @@ std::string Board::Click(int x, int y)
 
     Move move;
 
-    if ((_isPlayerWhite && _turnColor == Color::White) || (!_isPlayerWhite && _turnColor == Color::Black))
+    if (_playerColor == _turnColor)
     {
-        if (_isPlayerWhite)
+        if (_playerColor == Color::White)
         {
             position = Position(x / _size, 7 - (y / _size));
         }
@@ -302,11 +289,6 @@ void Board::SelectPiece(const std::shared_ptr<Square> &square)
     {
         move->SetSelected(true);
     }
-}
-
-bool Board::IsPlayerWhite() const
-{
-    return _isPlayerWhite;
 }
 
 void Board::MovePiece(std::string from, std::string to)
@@ -577,7 +559,7 @@ void Board::Draw(SDL_Renderer *renderer)
     {
         for (auto square : row)
         {
-            square->Draw(renderer, _isPlayerWhite);
+            square->Draw(renderer, _playerColor == Color::White);
         }
     }
 }

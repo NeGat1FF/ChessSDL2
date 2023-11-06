@@ -47,7 +47,7 @@ bool TextureManager::LoadSVG(const std::string& id, const std::string& filename,
     updated_content = std::regex_replace(updated_content, height_regex, "height=\"" + _size + "\"");
 
     // Load from raw data
-    SDL_RWops* rw = SDL_RWFromConstMem(updated_content.c_str(), updated_content.size());
+    SDL_RWops* rw = SDL_RWFromConstMem(updated_content.c_str(), static_cast<int>(updated_content.size()));
     SDL_Surface* surface = IMG_LoadSVG_RW(rw);
 
     if (!surface) {
@@ -77,7 +77,7 @@ bool TextureManager::LoadSVG(const std::string& dir,unsigned int size, SDL_Rende
         }
 
         // Get number of files in directory
-        int num_files = std::distance(std::filesystem::directory_iterator(dir), std::filesystem::directory_iterator{});
+        std::size_t num_files = std::distance(std::filesystem::directory_iterator(dir), std::filesystem::directory_iterator{});
 
         if(_textures.size() != num_files)
             return false;

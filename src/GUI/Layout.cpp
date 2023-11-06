@@ -22,39 +22,60 @@ Layout::Layout(int width, int height, int topPadding, int spacing, TTF_Font *fon
 
 void Layout::ProcessInput(SDL_Event &event)
 {
+    for(auto &element : _elements){
+        if(element->GetType() == TextElementType::INPUT){
+            dynamic_cast<Input*>(element.get())->handleEvent(event);
+        }
+    }
     if (event.type == SDL_MOUSEMOTION)
     {
-        for (auto &button : _buttons)
+        for (auto &element : _elements)
         {
             SDL_Point mousePos = {event.button.x, event.button.y};
-            if (SDL_PointInRect(&mousePos, &button->GetRect()))
-            {
-                button->SetMouseOver(true);
-            }
-            else
-            {
-                button->SetMouseOver(false);
+            if (element->GetType() == TextElementType::BUTTON){
+                Button* button = dynamic_cast<Button*>(element.get());
+                if (SDL_PointInRect(&mousePos, &button->GetRect()))
+                {
+                    button->SetColor(SDL_Color{64, 64, 64, 255});
+                }
+                else
+                {
+                    button->SetColor(SDL_Color{32, 32, 32, 255});
+                }
             }
         }
     }
     if (event.type == SDL_MOUSEBUTTONDOWN)
     {
         if (event.button.button == SDL_BUTTON_LEFT){
-            for (auto &button : _buttons)
+            for (auto &element : _elements)
             {
                 SDL_Point mousePos = {event.button.x, event.button.y};
-                if (SDL_PointInRect(&mousePos, &button->GetRect()))
+                if (element->GetType() == TextElementType::BUTTON && SDL_PointInRect(&mousePos, &element->GetRect()))
                 {
-                    button->Execute();
+                    dynamic_cast<Button*>(element.get())->Execute();
+                }
+                if (element->GetType() == TextElementType::INPUT && SDL_PointInRect(&mousePos, &element->GetRect())){
+                    dynamic_cast<Input*>(element.get())->onClicked();
                 }
             }
         }
     }
 }
 
-void Layout::AddButton(std::unique_ptr<Button> button)
+std::string Layout::GetText()
 {
-    _buttons.push_back(std::move(button));
+    for(auto &element : _elements){
+        if(element->GetType() == TextElementType::INPUT){
+            return dynamic_cast<Input*>(element.get())->GetText();
+        }
+    }
+
+    return "";
+}
+void Layout::AddElement(std::unique_ptr<TextElement> element)
+{
+    _elements.push_back(std::move(element));
 
     _updateSize();
 }
@@ -74,9 +95,9 @@ void Layout::Draw()
 
     SDL_RenderCopy(_renderer, _titleTexture, nullptr, &_titleRect);
 
-    for (auto &button : _buttons)
+    for (auto &element : _elements)
     {
-        button->Draw();
+        element->Draw();
     }
 }
 
@@ -120,22 +141,22 @@ void Layout::_updateSize()
 {
     _updateTextRect();
 
-    int buttonCount = _buttons.size();
-    if (buttonCount == 0)
+    size_t elementCount = _elements.size();
+    if (elementCount == 0)
     {
         return;
     }
 
-    int buttonWidth = static_cast<int>(_rect.w * 0.4);
-    int buttonHeight = static_cast<int>(_rect.h * 0.1);
+    int elementWidth = static_cast<int>(_rect.w * 0.4);
+    int elementHeight = static_cast<int>(_rect.h * 0.1);
 
-    int spaceBetweenButtons = _spacing; // Use the specified spacing between buttons
-    int buttonY = _titleRect.y + _titleRect.h + spaceBetweenButtons;
+    int spaceBetweenElements = _spacing; // Use the specified spacing between buttons
+    int elementY = _titleRect.y + _titleRect.h + spaceBetweenElements;
 
-    for (auto &button : _buttons)
+    for (auto &element : _elements)
     {
-        int buttonX = (_rect.w - buttonWidth) / 2;
-        button->Resize(buttonX, buttonY, buttonWidth, buttonHeight);
-        buttonY += buttonHeight + spaceBetweenButtons;
+        int elementX = (_rect.w - elementWidth) / 2;
+        element->Resize(elementX, elementY, elementWidth, elementHeight);
+        elementY += elementHeight + spaceBetweenElements;
     }
 }

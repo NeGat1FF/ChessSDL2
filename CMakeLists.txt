@@ -18,8 +18,6 @@ if(WIN32)
     set(SDL2_mixer_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_mixer)
     set(SDL2_ttf_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_ttf)
     set(SDL2_net_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_net)
-
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -mconsole)
 endif()
 
 find_package(SDL2 REQUIRED)
@@ -32,5 +30,5 @@ find_package(SDL2_net REQUIRED)
 file(GLOB_RECURSE PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
 
-add_executable(${PROJECT_NAME} ${PROJECT_SOURCES} ${PROJECT_HEADERS})
+add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES} ${PROJECT_HEADERS})
 target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES} SDL2_image SDL2_mixer SDL2_ttf SDL2_net)

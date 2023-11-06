@@ -26,7 +26,7 @@ bool AudioManager::LoadSound(const std::string& folderPath){
     }
 
     // Get number of files in folder
-    int numFiles = std::distance(std::filesystem::directory_iterator(folderPath), std::filesystem::directory_iterator{});
+    std::size_t numFiles = std::distance(std::filesystem::directory_iterator(folderPath), std::filesystem::directory_iterator{});
 
     if(numFiles != _soundCache.size()){
         return false;
@@ -60,7 +60,7 @@ bool AudioManager::LoadMusic(const std::string& folderPath){
     }
 
     // Get number of files in folder
-    int numFiles = std::distance(std::filesystem::directory_iterator(folderPath), std::filesystem::directory_iterator{});
+    std::size_t numFiles = std::distance(std::filesystem::directory_iterator(folderPath), std::filesystem::directory_iterator{});
 
     if(numFiles != _soundCache.size()){
         return false;

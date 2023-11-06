@@ -24,9 +24,8 @@
 class Board
 {
 public:
-    Board(bool isPlayerWhite = true, unsigned int size = 64);
+    Board(Color playerColor = Color::White, unsigned int size = 64, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    void InitPieces();
     void Resize(int size);
     void Draw(SDL_Renderer *renderer);
 
@@ -46,7 +45,6 @@ public:
 
     void LoadFEN(const std::string& fen);
     bool IsTarget(const Position& pos, Color color);
-    bool IsPlayerWhite() const;
 
     std::shared_ptr<Square> GetEnPassantSquare() const;
     std::string GetFEN() const;
@@ -62,6 +60,7 @@ private:
     Move _lastMove;
 
     Color _turnColor;
+    Color _playerColor;
 
     int _halfMoveClock;
     int _fullMoveNumber;
@@ -77,7 +76,6 @@ private:
     bool _isWhiteChecked;
     bool _isBlackChecked;
 
-    bool _isPlayerWhite;
 
     std::shared_ptr<Square> _whiteKingSquare;
     std::shared_ptr<Square> _blackKingSquare;
