@@ -116,11 +116,11 @@ int main(int argc, char *argv[])
     mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Multiplayer", [&currentLayout, &multiplayerLayout]{currentLayout = multiplayerLayout;}, font, renderer));
     mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Quit", SDL_Quit, font, renderer));
 
-    multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]{currentLayout = nullptr; createNetworkThread(networkThread, board);hostNetwork();}, font, renderer));
+    multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]{currentLayout = nullptr; hostNetwork(); createNetworkThread(networkThread, board);}, font, renderer));
     multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &joinLayout]{currentLayout = joinLayout;}, font, renderer));
 
     joinLayout->AddElement(std::make_unique<Input>(SDL_Color(32, 32, 32, 255), "", font, renderer));
-    joinLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &isPlayerWhite, &networkThread]{isPlayerWhite = false; std::string ip = currentLayout->GetText(); currentLayout = nullptr; createNetworkThread(networkThread, board); board = new Board(Color::Black); joinNetwork(ip.c_str());}, font, renderer));
+    joinLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &isPlayerWhite, &networkThread]{isPlayerWhite = false; std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(Color::Black); joinNetwork(ip.c_str()); createNetworkThread(networkThread, board);}, font, renderer));
 
     currentLayout = mainLayout;
 
