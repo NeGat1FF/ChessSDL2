@@ -35,6 +35,9 @@ public:
     void MovePiece(std::string from, std::string to);
     void SelectPiece(const std::shared_ptr<Square>& square);
 
+    Color GetPlayerColor() const;
+    void SetPlayerColor(Color color);
+
     std::shared_ptr<Square> GetSquare(int x, int y);
     std::shared_ptr<Square> GetSquare(const Position& pos);
     std::string Click(int x, int y);

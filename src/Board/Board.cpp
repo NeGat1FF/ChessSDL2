@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Board::Board(SDL_Renderer* renderer, Color playerColor, unsigned int size, std::string fen) : _renderer(renderer), _playerColor(playerColor), _size(size)
+Board::Board(SDL_Renderer *renderer, Color playerColor, unsigned int size, std::string fen) : _renderer(renderer), _playerColor(playerColor), _size(size)
 {
     bool isWhite = false;
     for (int x = 0; x < 8; ++x)
@@ -289,12 +289,26 @@ void Board::SelectPiece(const std::shared_ptr<Square> &square)
 
     auto moves = square->GetPiece()->GetMoves(square->GetPosition(), *this);
 
-    FilterMoves(moves, square, square->GetPiece()->GetColor());
+    // Check if selected piece is king
+    if (square->GetPiece()->GetType() != Type::King)
+    {
+        FilterMoves(moves, square, square->GetPiece()->GetColor());
+    }
 
     for (auto move : moves)
     {
         move->SetSelected(true);
     }
+}
+
+Color Board::GetPlayerColor() const
+{
+    return _playerColor;
+}
+
+void Board::SetPlayerColor(Color color)
+{
+    _playerColor = color;
 }
 
 void Board::MovePiece(std::string from, std::string to)
@@ -505,6 +519,11 @@ bool Board::IsValidCoordinate(const Position &pos) const
     return IsValidCoordinate(pos.x, pos.y);
 }
 
+// The FilterMoves function is used to filter out invalid moves from a list of potential moves for a chess piece.
+// It takes a list of potential moves, a square from which a piece is moving, and the color of the piece.
+// It simulates each potential move and checks if the move would put the king in check.
+// If a move would result in the king being in check, it is removed from the list of potential moves.
+// The function modifies the original list of moves to only include valid moves.
 void Board::FilterMoves(std::vector<std::shared_ptr<Square>> &moves, const std::shared_ptr<Square> &square, Color color)
 {
     auto piece = square->GetPiece();
@@ -563,8 +582,9 @@ std::shared_ptr<Square> Board::GetSquare(const Position &pos)
 
 void Board::Draw()
 {
-    SDL_Texture* boardTexture;
-    if(_playerColor == Color::Black){
+    SDL_Texture *boardTexture;
+    if (_playerColor == Color::Black)
+    {
         boardTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 8 * _size, 8 * _size);
         SDL_SetRenderTarget(_renderer, boardTexture);
     }
@@ -577,16 +597,16 @@ void Board::Draw()
         }
     }
 
-
-    if(_playerColor == Color::Black){
+    if (_playerColor == Color::Black)
+    {
         SDL_SetRenderTarget(_renderer, NULL);
         SDL_RenderCopyEx(_renderer, boardTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
     }
-    
 
     SDL_RenderPresent(_renderer);
 
-    if(_playerColor == Color::Black){
+    if (_playerColor == Color::Black)
+    {
         SDL_DestroyTexture(boardTexture);
     }
 }

@@ -18,6 +18,8 @@ int SQUARE_SIZE = 64;
 int WINDOW_WIDTH = SQUARE_SIZE * 8;
 int WINDOW_HEIGHT = SQUARE_SIZE * 8;
 
+bool isMultiplayer = false;
+
 int setWindowSizeSquare(SDL_Window *window, int newSize)
 {
     if (newSize % 8 != 0)
@@ -29,9 +31,10 @@ int setWindowSizeSquare(SDL_Window *window, int newSize)
     return newSize / 8;
 }
 
-void NetworkThread(Board* &board)
+void NetworkThread(Board *&board)
 {
-    while(true){
+    while (true)
+    {
         char data[32];
         NetworkManager::Instance().ReceiveTCP(data, 32);
         std::string from;
@@ -46,7 +49,8 @@ void NetworkThread(Board* &board)
     }
 }
 
-void hostNetwork() {
+void hostNetwork()
+{
     NetworkManager::Instance().ResolveHost(nullptr, 1234);
     NetworkManager::Instance().OpenTCPSocket();
     NetworkManager::Instance().AcceptTCP();
@@ -56,7 +60,8 @@ void hostNetwork() {
     NetworkManager::Instance().SendTCP("Server Connected", 32);
 }
 
-void joinNetwork(const char* host) {
+void joinNetwork(const char *host)
+{
     NetworkManager::Instance().ResolveHost(host, 1234);
     NetworkManager::Instance().OpenTCPSocket();
     NetworkManager::Instance().SendTCP("Client Connected", 32);
@@ -65,11 +70,13 @@ void joinNetwork(const char* host) {
     std::cout << data << std::endl;
 }
 
-void createNetworkThread(std::thread* thread, Board* &board){
+void createNetworkThread(std::thread *thread, Board *&board)
+{
     thread = new std::thread(NetworkThread, std::ref(board));
     thread->detach();
-}
 
+    isMultiplayer = true;
+}
 
 int main(int argc, char *argv[])
 {
@@ -77,8 +84,6 @@ int main(int argc, char *argv[])
     TTF_Init();
 
     NetworkManager::Instance().Init();
-
-    bool isPlayerWhite = true;
 
     SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -98,40 +103,54 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    Board* board = new Board(renderer);
+    Board *board = new Board(renderer);
 
-    std::thread* networkThread = nullptr;
+    std::thread *networkThread = nullptr;
 
-    Layout* currentLayout = nullptr;
+    Layout *currentLayout = nullptr;
 
     TTF_Font *logoFont = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 64);
 
-    Layout* mainLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "ChessGame", {0, 0, 0, 200}, renderer);
-    Layout* multiplayerLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "Multiplayer", {0, 0, 0, 200}, renderer);
-    Layout* joinLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "Join", {0, 0, 0, 200}, renderer);
+    Layout *mainLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "ChessGame", {0, 0, 0, 200}, renderer);
+    Layout *multiplayerLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "Multiplayer", {0, 0, 0, 200}, renderer);
+    Layout *joinLayout = new Layout(WINDOW_WIDTH, WINDOW_HEIGHT, 32, 24, logoFont, "Join", {0, 0, 0, 200}, renderer);
 
     TTF_Font *font = TTF_OpenFont("assets/fonts/OpenSans-Regular.ttf", 30);
 
-    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Singleplayer", [&currentLayout]{currentLayout = nullptr;}, font, renderer));
-    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Multiplayer", [&currentLayout, &multiplayerLayout]{currentLayout = multiplayerLayout;}, font, renderer));
+    mainLayout->AddElement(std::make_unique<Button>(
+        SDL_Color(32, 32, 32, 255), "Singleplayer", [&currentLayout]
+        { currentLayout = nullptr; },
+        font, renderer));
+    mainLayout->AddElement(std::make_unique<Button>(
+        SDL_Color(32, 32, 32, 255), "Multiplayer", [&currentLayout, &multiplayerLayout]
+        { currentLayout = multiplayerLayout; },
+        font, renderer));
     mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Quit", SDL_Quit, font, renderer));
 
-    multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]{currentLayout = nullptr; hostNetwork(); createNetworkThread(networkThread, board);}, font, renderer));
-    multiplayerLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &joinLayout]{currentLayout = joinLayout;}, font, renderer));
+    multiplayerLayout->AddElement(std::make_unique<Button>(
+        SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]
+        {currentLayout = nullptr; hostNetwork(); createNetworkThread(networkThread, board); },
+        font, renderer));
+    multiplayerLayout->AddElement(std::make_unique<Button>(
+        SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &joinLayout]
+        { currentLayout = joinLayout; },
+        font, renderer));
 
     joinLayout->AddElement(std::make_unique<Input>(SDL_Color(32, 32, 32, 255), "", font, renderer));
-    joinLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &isPlayerWhite, &networkThread, &renderer]{isPlayerWhite = false; std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(renderer, Color::Black); joinNetwork(ip.c_str()); createNetworkThread(networkThread, board);}, font, renderer));
+    joinLayout->AddElement(std::make_unique<Button>(
+        SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &networkThread, &renderer]
+        {std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(renderer, Color::Black); joinNetwork(ip.c_str()); createNetworkThread(networkThread, board); },
+        font, renderer));
 
     currentLayout = mainLayout;
-
-    SDL_Texture* targetTexture;
 
     while (true)
     {
         SDL_Event e;
         if (SDL_PollEvent(&e))
         {
-            if(currentLayout != nullptr){
+            if (currentLayout != nullptr)
+            {
                 currentLayout->ProcessInput(e);
             }
             if (e.type == SDL_MOUSEBUTTONDOWN)
@@ -142,8 +161,23 @@ int main(int argc, char *argv[])
                     {
                         std::string move = board->Click(e.button.x, e.button.y);
 
-                        if(move != "NoneNone"){
-                            NetworkManager::Instance().SendTCP(move.c_str(), 32);
+                        if (move != "NoneNone")
+                        {
+                            if (isMultiplayer)
+                            {
+                                NetworkManager::Instance().SendTCP(move.c_str(), 32);
+                            }
+                            else
+                            {
+                                if (board->GetPlayerColor() == Color::Black)
+                                {
+                                    board->SetPlayerColor(Color::White);
+                                }
+                                else
+                                {
+                                    board->SetPlayerColor(Color::Black);
+                                }
+                            }
                         }
                     }
                 }
@@ -177,10 +211,12 @@ int main(int argc, char *argv[])
                 }
                 if (e.key.keysym.sym == SDLK_ESCAPE)
                 {
-                    if(currentLayout){
+                    if (currentLayout)
+                    {
                         currentLayout = nullptr;
                     }
-                    else{
+                    else
+                    {
                         currentLayout = mainLayout;
                     }
                 }
@@ -190,29 +226,12 @@ int main(int argc, char *argv[])
                 break;
             }
         }
-
-        // if(!isPlayerWhite){
-        //     targetTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WINDOW_WIDTH, WINDOW_HEIGHT);
-        //     SDL_SetRenderTarget(renderer, targetTexture);
-        // }
-
-        // if(!isPlayerWhite){
-        //     SDL_SetRenderTarget(renderer, NULL);
-        //     SDL_RenderCopyEx(renderer, targetTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
-        // }
-
-        // if(!isPlayerWhite){
-        //     SDL_DestroyTexture(targetTexture);
-        // }
     }
     delete mainLayout;
     delete multiplayerLayout;
     delete joinLayout;
     TTF_CloseFont(font);
     TTF_CloseFont(logoFont);
-    if(!isPlayerWhite){
-        SDL_DestroyTexture(targetTexture);
-    }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
