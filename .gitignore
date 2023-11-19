@@ -1,1 +1,6 @@
-/build
+.gitignore
+.vscode
+build
+bin
+lib
+include/SDL2
