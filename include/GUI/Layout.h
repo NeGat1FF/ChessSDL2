@@ -10,7 +10,7 @@
 class Layout {
 public:
     Layout(int width, int height, int topPadding, int spacing, TTF_Font* font, std::string title, SDL_Color color, SDL_Renderer* renderer);
-    void AddElement(std::unique_ptr<TextElement> element);
+    void AddElement(std::shared_ptr<TextElement> element);
     void Resize(int width, int height);
     void Draw();
     void ProcessInput(SDL_Event& event);
@@ -33,5 +33,5 @@ private:
     SDL_Rect _rect;
     SDL_Color _color;
     SDL_Renderer* _renderer;
-    std::vector<std::unique_ptr<TextElement>> _elements;
+    std::vector<std::shared_ptr<TextElement>> _elements;
 };

@@ -20,6 +20,8 @@ int WINDOW_HEIGHT = SQUARE_SIZE * 8;
 
 bool isMultiplayer = false;
 
+Uint16 port = 5353;
+
 int setWindowSizeSquare(SDL_Window *window, int newSize)
 {
     if (newSize % 8 != 0)
@@ -31,8 +33,40 @@ int setWindowSizeSquare(SDL_Window *window, int newSize)
     return newSize / 8;
 }
 
-void NetworkThread(Board *&board)
+void hostNetwork()
 {
+    NetworkManager::Instance().ResolveHost(nullptr, port);
+    NetworkManager::Instance().OpenTCPSocket();
+    NetworkManager::Instance().AcceptTCP();
+    char data[32];
+    NetworkManager::Instance().ReceiveTCP(data, 32);
+    std::cout << data << std::endl;
+    NetworkManager::Instance().SendTCP("Server Connected", 32);
+}
+
+void joinNetwork(const char *host)
+{
+    NetworkManager::Instance().ResolveHost(host, port);
+    NetworkManager::Instance().OpenTCPSocket();
+    NetworkManager::Instance().SendTCP("Client Connected", 32);
+    char data[32];
+    NetworkManager::Instance().ReceiveTCP(data, 32);
+    std::cout << data << std::endl;
+}
+
+void NetworkThread(Board *&board, const char *host)
+{
+    if(!NetworkManager::Instance().Init()){
+        SDL_Log("Failed to init network");
+    }
+    if (host != nullptr)
+    {
+        joinNetwork(host);
+    }
+    else
+    {
+        hostNetwork();
+    }
     while (true)
     {
         char data[32];
@@ -49,30 +83,9 @@ void NetworkThread(Board *&board)
     }
 }
 
-void hostNetwork()
+void createNetworkThread(std::thread *thread, Board *&board, const char *host)
 {
-    NetworkManager::Instance().ResolveHost(nullptr, 1234);
-    NetworkManager::Instance().OpenTCPSocket();
-    NetworkManager::Instance().AcceptTCP();
-    char data[32];
-    NetworkManager::Instance().ReceiveTCP(data, 32);
-    std::cout << data << std::endl;
-    NetworkManager::Instance().SendTCP("Server Connected", 32);
-}
-
-void joinNetwork(const char *host)
-{
-    NetworkManager::Instance().ResolveHost(host, 1234);
-    NetworkManager::Instance().OpenTCPSocket();
-    NetworkManager::Instance().SendTCP("Client Connected", 32);
-    char data[32];
-    NetworkManager::Instance().ReceiveTCP(data, 32);
-    std::cout << data << std::endl;
-}
-
-void createNetworkThread(std::thread *thread, Board *&board)
-{
-    thread = new std::thread(NetworkThread, std::ref(board));
+    thread = new std::thread(NetworkThread, std::ref(board), host);
     thread->detach();
 
     isMultiplayer = true;
@@ -82,10 +95,8 @@ int main(int argc, char *argv[])
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     TTF_Init();
-
-    NetworkManager::Instance().Init();
-
-    SDL_Window *window = SDL_CreateWindow("SDL2 Window", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+    
+    SDL_Window *window = SDL_CreateWindow("SDL2 Chess", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
@@ -95,7 +106,7 @@ int main(int argc, char *argv[])
     if (!AudioManager::Instance().LoadSound("assets/audio"))
     {
         SDL_Log("Failed to load sound");
-        return 1;
+        return 1;  
     }
     if (!TextureManager::Instance().LoadSVG("assets/sprites", SQUARE_SIZE, renderer))
     {
@@ -129,18 +140,25 @@ int main(int argc, char *argv[])
 
     multiplayerLayout->AddElement(std::make_unique<Button>(
         SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]
-        {currentLayout = nullptr; hostNetwork(); createNetworkThread(networkThread, board); },
+        {currentLayout = nullptr; createNetworkThread(networkThread, board, nullptr); },
         font, renderer));
     multiplayerLayout->AddElement(std::make_unique<Button>(
         SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &joinLayout]
         { currentLayout = joinLayout; },
         font, renderer));
 
+    std::shared_ptr<Button> backButton = std::make_unique<Button>(
+        SDL_Color(32, 32, 32, 255), "Back", [&currentLayout, &mainLayout]
+        { currentLayout = mainLayout; },
+        font, renderer);
+    multiplayerLayout->AddElement(backButton);
+
     joinLayout->AddElement(std::make_unique<Input>(SDL_Color(32, 32, 32, 255), "", font, renderer));
     joinLayout->AddElement(std::make_unique<Button>(
         SDL_Color(32, 32, 32, 255), "Join", [&currentLayout, &board, &networkThread, &renderer]
-        {std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(renderer, Color::Black); joinNetwork(ip.c_str()); createNetworkThread(networkThread, board); },
+        {std::string ip = currentLayout->GetText(); currentLayout = nullptr; board = new Board(renderer, Color::Black); createNetworkThread(networkThread, board, ip.c_str()); },
         font, renderer));
+    joinLayout->AddElement(backButton);
 
     currentLayout = mainLayout;
 
@@ -169,14 +187,7 @@ int main(int argc, char *argv[])
                             }
                             else
                             {
-                                if (board->GetPlayerColor() == Color::Black)
-                                {
-                                    board->SetPlayerColor(Color::White);
-                                }
-                                else
-                                {
-                                    board->SetPlayerColor(Color::Black);
-                                }
+                                // TODO: AI move
                             }
                         }
                     }
@@ -223,9 +234,18 @@ int main(int argc, char *argv[])
             }
             if (e.type == SDL_QUIT)
             {
+                NetworkManager::Instance().Quit();
                 break;
             }
         }
+
+        board->Draw();
+        if (currentLayout)
+        {
+            currentLayout->Draw();
+        }
+
+        SDL_RenderPresent(renderer);
     }
     delete mainLayout;
     delete multiplayerLayout;

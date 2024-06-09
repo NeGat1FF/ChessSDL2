@@ -603,7 +603,7 @@ void Board::Draw()
         SDL_RenderCopyEx(_renderer, boardTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
     }
 
-    SDL_RenderPresent(_renderer);
+    //SDL_RenderPresent(_renderer);
 
     if (_playerColor == Color::Black)
     {

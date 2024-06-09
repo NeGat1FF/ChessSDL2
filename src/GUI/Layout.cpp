@@ -62,7 +62,7 @@ void Layout::ProcessInput(SDL_Event &event)
         }
     }
 
-    Draw();
+    //Draw();
 }
 
 std::string Layout::GetText()
@@ -75,9 +75,9 @@ std::string Layout::GetText()
 
     return "";
 }
-void Layout::AddElement(std::unique_ptr<TextElement> element)
+void Layout::AddElement(std::shared_ptr<TextElement> element)
 {
-    _elements.push_back(std::move(element));
+    _elements.push_back(element);
 
     _updateSize();
 }
@@ -102,7 +102,7 @@ void Layout::Draw()
         element->Draw();
     }
 
-    SDL_RenderPresent(_renderer);
+    //SDL_RenderPresent(_renderer);
 }
 
 void Layout::_updateTextRect()
