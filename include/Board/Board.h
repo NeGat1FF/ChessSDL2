@@ -36,6 +36,7 @@ public:
     void SelectPiece(const std::shared_ptr<Square>& square);
 
     Color GetPlayerColor() const;
+    Color GetTurnColor() const;
     void SetPlayerColor(Color color);
 
     std::shared_ptr<Square> GetSquare(int x, int y);

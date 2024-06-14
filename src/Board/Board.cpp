@@ -1,6 +1,5 @@
 #include "Board/Board.h"
 
-#include <iostream>
 
 Board::Board(SDL_Renderer *renderer, Color playerColor, unsigned int size, std::string fen) : _renderer(renderer), _playerColor(playerColor), _size(size)
 {
@@ -277,7 +276,7 @@ std::string Board::Click(int x, int y)
         }
     }
 
-    Draw();
+    //Draw();
 
     return move._from.ToString() + move._to.ToString();
 }
@@ -304,6 +303,11 @@ void Board::SelectPiece(const std::shared_ptr<Square> &square)
 Color Board::GetPlayerColor() const
 {
     return _playerColor;
+}
+
+Color Board::GetTurnColor() const
+{
+    return _turnColor;
 }
 
 void Board::SetPlayerColor(Color color)
@@ -601,12 +605,6 @@ void Board::Draw()
     {
         SDL_SetRenderTarget(_renderer, NULL);
         SDL_RenderCopyEx(_renderer, boardTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
-    }
-
-    //SDL_RenderPresent(_renderer);
-
-    if (_playerColor == Color::Black)
-    {
         SDL_DestroyTexture(boardTexture);
     }
 }

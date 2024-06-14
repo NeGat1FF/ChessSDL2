@@ -6,6 +6,7 @@
 #include "Utils/AudioManager.h"
 #include "Utils/TextureManager.h"
 #include "Utils/NetworkManager.h"
+#include "Utils/AIManager.h"
 
 #include "GUI/Layout.h"
 
@@ -82,6 +83,17 @@ void NetworkThread(Board *&board, const char *host)
 
         board->MovePiece(from, to);
     }
+}
+
+void AIThread(Board *&board)
+{
+    AIManager aiManager(board);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    int depth = 2;
+    int positions = 0;
+    aiManager.generatePositions(depth, positions);
 }
 
 void createNetworkThread(std::thread *thread, Board *&board, const char *host)
@@ -161,7 +173,10 @@ int main(int argc, char *argv[])
         font, renderer));
     joinLayout->AddElement(backButton);
 
-    currentLayout = mainLayout;
+    currentLayout = nullptr;
+
+    std::thread aiThread(AIThread, std::ref(board));
+    aiThread.detach();
 
     while (shouldRun)
     {
@@ -245,6 +260,9 @@ int main(int argc, char *argv[])
             currentLayout->Draw();
         }
 
+        // if(board->IsReadyToDraw()){
+        //     SDL_RenderPresent(renderer);
+        // }
         SDL_RenderPresent(renderer);
     }
 
