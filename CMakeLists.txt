@@ -7,17 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
 if(WIN32)
-    link_directories(${PROJECT_SOURCE_DIR}/lib)
-
-    set(SDL2_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2)
-
-    set(SDL2_image_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_image)
-    set(SDL2_mixer_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_mixer)
-    set(SDL2_ttf_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_ttf)
-    set(SDL2_net_DIR ${PROJECT_SOURCE_DIR}/lib/cmake/SDL2_net)
+    set(CMAKE_PREFIX_PATH C:/SDL2)
 endif()
 
 find_package(SDL2 REQUIRED)
@@ -30,5 +21,7 @@ find_package(SDL2_net REQUIRED)
 file(GLOB_RECURSE PROJECT_SOURCES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 file(GLOB_RECURSE PROJECT_HEADERS ${PROJECT_SOURCE_DIR}/include/*.h)
 
-add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES} ${PROJECT_HEADERS})
-target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES} SDL2_image SDL2_mixer SDL2_ttf SDL2_net)
+include_directories(${PROJECT_SOURCE_DIR}/include ${SDL2_INCLUDE_DIRS} ${SDL2_IMAGE_INCLUDE_DIRS} ${SDL2_MIXER_INCLUDE_DIRS} ${SDL2_TTF_INCLUDE_DIRS} ${SDL2_NET_INCLUDE_DIRS})
+
+add_executable(${PROJECT_NAME} WIN32 ${PROJECT_SOURCES} ${PROJECT_HEADERS} )
+target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES} SDL2_image::SDL2_image SDL2_net::SDL2_net SDL2_ttf::SDL2_ttf SDL2_mixer::SDL2_mixer)

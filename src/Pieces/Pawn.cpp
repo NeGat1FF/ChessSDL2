@@ -1,8 +1,5 @@
 #include "Pieces/Pawn.h"
-
 #include "Board/Board.h"
-
-#include <SDL2/SDL_log.h>
 
 Pawn::Pawn(Color color) : Piece(Type::Pawn, color) {}
 

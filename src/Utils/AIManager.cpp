@@ -41,7 +41,6 @@ void AIManager::generatePositions(int depth, int &positions) {
         for(auto square : move.second){
             _board->MovePiece(move.first,square);
             std::cout << "Moved " << move.first->GetPosition().ToString() << " to " << square->GetPosition().ToString() << std::endl;
-            sleep(1);
             generatePositions(depth - 1,positions);
             _board->LoadFEN(fen);
         }

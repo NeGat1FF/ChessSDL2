@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 
-#include <SDL2/SDL_render.h>
+#include <SDL_render.h>
 
 #include "Utils/Move.h"
 #include "Utils/AudioManager.h"

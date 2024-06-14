@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SDL2/SDL_render.h"
+#include "SDL_render.h"
 #include "Pieces/Piece.h"
 #include "Utils/TextureManager.h"
 #include "Utils/Position.h"

@@ -1,5 +1,4 @@
 #include "GUI/Input.h"
-#include "SDL2/SDL_log.h"
 
 Input::Input(SDL_Color color, std::string text, TTF_Font* font, SDL_Renderer* renderer) : TextElement(color, text, font, renderer)
 {
