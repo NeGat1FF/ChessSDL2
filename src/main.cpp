@@ -19,6 +19,7 @@ int WINDOW_WIDTH = SQUARE_SIZE * 8;
 int WINDOW_HEIGHT = SQUARE_SIZE * 8;
 
 bool isMultiplayer = false;
+bool shouldRun = true;
 
 Uint16 port = 5353;
 
@@ -136,7 +137,7 @@ int main(int argc, char *argv[])
         SDL_Color(32, 32, 32, 255), "Multiplayer", [&currentLayout, &multiplayerLayout]
         { currentLayout = multiplayerLayout; },
         font, renderer));
-    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Quit", SDL_Quit, font, renderer));
+    mainLayout->AddElement(std::make_unique<Button>(SDL_Color(32, 32, 32, 255), "Quit", [](){shouldRun = false;}, font, renderer));
 
     multiplayerLayout->AddElement(std::make_unique<Button>(
         SDL_Color(32, 32, 32, 255), "Host", [&currentLayout, &networkThread, &board]
@@ -162,7 +163,7 @@ int main(int argc, char *argv[])
 
     currentLayout = mainLayout;
 
-    while (true)
+    while (shouldRun)
     {
         SDL_Event e;
         if (SDL_PollEvent(&e))
@@ -234,7 +235,6 @@ int main(int argc, char *argv[])
             }
             if (e.type == SDL_QUIT)
             {
-                NetworkManager::Instance().Quit();
                 break;
             }
         }
@@ -247,9 +247,14 @@ int main(int argc, char *argv[])
 
         SDL_RenderPresent(renderer);
     }
+
+    NetworkManager::Instance().Quit();
+
     delete mainLayout;
     delete multiplayerLayout;
     delete joinLayout;
+    delete board;
+    delete networkThread;
     TTF_CloseFont(font);
     TTF_CloseFont(logoFont);
     SDL_DestroyRenderer(renderer);

@@ -1,4 +1,4 @@
-#include "GUI\TextElement.h"
+#include "GUI/TextElement.h"
 
 TextElement::TextElement(SDL_Color color, std::string text, TTF_Font *font, SDL_Renderer *renderer, bool isButton)
 {
@@ -66,6 +66,10 @@ TextElement::~TextElement()
 
 void TextElement::_updateTextRect()
 {
+    if(!_text.length()){
+        _textTexture = nullptr;
+        return;
+    }
     float aspectRatio = float(_rect.h) / float(_rect.w); // Button aspect ratio is 3:1
     float fontScale = 1.5f;                              // Font size is 80% of button size
 

@@ -1,5 +1,5 @@
-#include "GUI\Input.h"
-#include "SDL2\SDL_log.h"
+#include "GUI/Input.h"
+#include "SDL2/SDL_log.h"
 
 Input::Input(SDL_Color color, std::string text, TTF_Font* font, SDL_Renderer* renderer) : TextElement(color, text, font, renderer)
 {
@@ -22,9 +22,6 @@ void Input::handleEvent(SDL_Event &e)
     else if(e.type == SDL_KEYDOWN){
         if(e.key.keysym.sym == SDLK_BACKSPACE && _text.length() > 0){
             _text.pop_back();
-
-            // Convert _text.length() to a const char* and pass it to SDL_Log()
-            SDL_Log("Text length: %d", _text.length());
         }
     }
     _updateTextRect();

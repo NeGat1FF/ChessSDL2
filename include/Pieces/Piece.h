@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "Utils\Position.h"
+#include "Utils/Position.h"
 
 class Square;
 class Board;
