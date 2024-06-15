@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SDL_render.h"
 #include "Pieces/Piece.h"
 #include "Utils/TextureManager.h"
 #include "Utils/Position.h"
@@ -8,27 +7,21 @@
 class Square
 {
 public:
-    Square(int x, int y, unsigned int size, bool isWhite);
-
-    SDL_Rect* GetRect();
-
-    void Draw(SDL_Renderer *renderer, bool isPlayerWhite);
+    Square(int x, int y);
 
     std::shared_ptr<Piece> GetPiece() const;
     void SetPiece(const std::shared_ptr<Piece>& piece);
 
-    bool IsSelected() const;
-    void SetSelected(bool isSelected);
+    int GetX() const;
+    int GetY() const;
 
     Position GetPosition() const;
 
     void Resize(unsigned int size);
 
 private:
-    SDL_Rect _rect;
-    bool _isSelected;
+    int _x;
+    int _y;
     Position _position;
-    const bool _isWhite;
-    unsigned int _size;
     std::shared_ptr<Piece> _piece;
 };

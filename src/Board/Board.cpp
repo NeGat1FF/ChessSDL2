@@ -1,7 +1,7 @@
 #include "Board/Board.h"
 
 
-Board::Board(SDL_Renderer *renderer, Color playerColor, unsigned int size, std::string fen) : _renderer(renderer), _playerColor(playerColor), _size(size)
+Board::Board(Color playerColor, std::string fen) : _playerColor(playerColor)
 {
     bool isWhite = false;
     for (int x = 0; x < 8; ++x)
@@ -9,30 +9,12 @@ Board::Board(SDL_Renderer *renderer, Color playerColor, unsigned int size, std::
         std::vector<std::shared_ptr<Square>> row;
         for (int y = 0; y < 8; ++y)
         {
-            row.push_back(std::make_shared<Square>(x, y, _size, isWhite));
-            isWhite = !isWhite;
+            row.push_back(std::make_shared<Square>(x, y));
         }
         this->_board.push_back(row);
-        isWhite = !isWhite;
     }
 
     LoadFEN(fen);
-
-    Draw();
-}
-
-void Board::Resize(int size)
-{
-    _size = size;
-    for (auto &row : _board)
-    {
-        for (auto &square : row)
-        {
-            square->Resize(size);
-        }
-    }
-
-    Draw();
 }
 
 const Move &Board::GetLastMove() const
@@ -226,80 +208,6 @@ void Board::LoadFEN(const std::string &fen)
     UpdateCheckStatus();
 }
 
-std::string Board::Click(int x, int y)
-{
-    Position position;
-
-    Move move;
-
-    if (_playerColor == _turnColor)
-    {
-        if (_playerColor == Color::White)
-        {
-            position = Position(x / _size, 7 - (y / _size));
-        }
-        else
-        {
-            position = Position(7 - (x / _size), y / _size);
-        }
-
-        auto square = this->_board[position.x][position.y];
-
-        if (square->IsSelected())
-        {
-            if (_selectedSquare && _selectedSquare != square)
-            {
-                MovePiece(_selectedSquare, square);
-                move._from = _selectedSquare->GetPosition();
-                move._to = square->GetPosition();
-            }
-            _unselectAll();
-        }
-        else
-        {
-            if (square->GetPiece())
-            {
-                auto piece = square->GetPiece();
-                if (piece->GetColor() == _turnColor)
-                {
-                    if (_selectedSquare)
-                    {
-                        _unselectAll();
-                    }
-                    SelectPiece(square);
-                }
-            }
-            else
-            {
-                _unselectAll();
-            }
-        }
-    }
-
-    //Draw();
-
-    return move._from.ToString() + move._to.ToString();
-}
-
-void Board::SelectPiece(const std::shared_ptr<Square> &square)
-{
-    square->SetSelected(true);
-    _selectedSquare = square;
-
-    auto moves = square->GetPiece()->GetMoves(square->GetPosition(), *this);
-
-    // Check if selected piece is king
-    if (square->GetPiece()->GetType() != Type::King)
-    {
-        FilterMoves(moves, square, square->GetPiece()->GetColor());
-    }
-
-    for (auto move : moves)
-    {
-        move->SetSelected(true);
-    }
-}
-
 Color Board::GetPlayerColor() const
 {
     return _playerColor;
@@ -321,8 +229,6 @@ void Board::MovePiece(std::string from, std::string to)
     Position toPosition(to);
 
     MovePiece(_board[fromPosition.x][fromPosition.y], _board[toPosition.x][toPosition.y]);
-
-    Draw();
 }
 
 void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
@@ -500,19 +406,6 @@ bool Board::IsTarget(const Position &pos, Color color)
     return false;
 }
 
-void Board::_unselectAll()
-{
-    for (auto row : this->_board)
-    {
-        for (auto square : row)
-        {
-            square->SetSelected(false);
-        }
-    }
-
-    _selectedSquare = nullptr;
-}
-
 bool Board::IsValidCoordinate(int x, int y) const
 {
     return x >= 0 && x < 8 && y >= 0 && y < 8;
@@ -582,29 +475,4 @@ std::shared_ptr<Square> Board::GetSquare(int x, int y)
 std::shared_ptr<Square> Board::GetSquare(const Position &pos)
 {
     return GetSquare(pos.x, pos.y);
-}
-
-void Board::Draw()
-{
-    SDL_Texture *boardTexture;
-    if (_playerColor == Color::Black)
-    {
-        boardTexture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, 8 * _size, 8 * _size);
-        SDL_SetRenderTarget(_renderer, boardTexture);
-    }
-
-    for (auto row : this->_board)
-    {
-        for (auto square : row)
-        {
-            square->Draw(_renderer, _playerColor == Color::White);
-        }
-    }
-
-    if (_playerColor == Color::Black)
-    {
-        SDL_SetRenderTarget(_renderer, NULL);
-        SDL_RenderCopyEx(_renderer, boardTexture, NULL, NULL, 180, NULL, SDL_FLIP_NONE);
-        SDL_DestroyTexture(boardTexture);
-    }
 }

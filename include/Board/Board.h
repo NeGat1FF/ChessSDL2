@@ -5,8 +5,6 @@
 #include <string>
 #include <sstream>
 
-#include <SDL_render.h>
-
 #include "Utils/Move.h"
 #include "Utils/AudioManager.h"
 #include "Square.h"
@@ -24,10 +22,7 @@
 class Board
 {
 public:
-    Board(SDL_Renderer* renderer, Color playerColor = Color::White, unsigned int size = 64, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-
-    void Resize(int size);
-    void Draw();
+    Board(Color playerColor = Color::White, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
     bool IsValidCoordinate(int x, int y) const;
     bool IsValidCoordinate(const Position& pos) const;
@@ -41,7 +36,6 @@ public:
 
     std::shared_ptr<Square> GetSquare(int x, int y);
     std::shared_ptr<Square> GetSquare(const Position& pos);
-    std::string Click(int x, int y);
     const Move& GetLastMove() const;
 
     void FilterMoves(std::vector<std::shared_ptr<Square>>& moves, const std::shared_ptr<Square>& square, Color color);
@@ -57,8 +51,6 @@ public:
 
 
 private:
-
-    void _unselectAll();
     std::shared_ptr<Piece> _getPieceFromFEN(char fenChar);
 
     Move _lastMove;
@@ -79,8 +71,6 @@ private:
 
     bool _isWhiteChecked;
     bool _isBlackChecked;
-
-    SDL_Renderer *_renderer;
 
     std::shared_ptr<Square> _whiteKingSquare;
     std::shared_ptr<Square> _blackKingSquare;
