@@ -30,5 +30,9 @@ make
 ### Running the Game
 After compiling, run the executable generated in the project directory.
 
+### Images
+![image](https://github.com/NeGat1FF/ChessSDL2/assets/45542040/f3d1e3df-84f7-4ff0-b1e4-09a79f3e7e1a)
+
+
 ## Contributing
 Contributions to ChessSDL2 are welcome! Whether it's bug fixes, new features, or improvements to existing features, your help is appreciated.
