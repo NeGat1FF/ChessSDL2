@@ -1,86 +1,51 @@
 #pragma once
 
-#include <vector>
-#include <memory>
 #include <string>
-#include <sstream>
+#include <cstdint>
 
-#include "Utils/Move.h"
-#include "Square.h"
-
-// Piece headers
-#include "Pieces/Piece.h"
-#include "Pieces/Pawn.h"
-#include "Pieces/Rook.h"
-#include "Pieces/Knight.h"
-#include "Pieces/Bishop.h"
-#include "Pieces/Queen.h"
-#include "Pieces/King.h"
-
+using bitboard = uint64_t;
 
 class Board
 {
 public:
-    Board(Color playerColor = Color::White, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    Board();
+    Board(const std::string &fen);
 
-    void MakeMove(Position from, Position to);
-    void MakeMove(std::string from, std::string to);
-    void MakeMove(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
+    void LoadFen(const std::string &fen);
 
-    void UndoMove();
+    void setBit(bitboard &bb, int square);
+    void clearBit(bitboard &bb, int square);
 
-    void SelectPiece(const std::shared_ptr<Square>& square);
-
-    inline Color GetPlayerColor() const { return _playerColor;}
-    inline Color GetTurnColor() const { return _turnColor;}
-    inline void SetPlayerColor(Color color) { _playerColor = color;}
-
-    inline std::shared_ptr<Square> GetSquare(int x, int y);
-    inline std::shared_ptr<Square> GetSquare(const Position& pos);
-
-    inline Move GetLastMove() const { return _lastMove;}
-
-    void FilterMoves(std::vector<Position>& moves, Position square, Color color);
-    void VirtualMove(Position fromPos,Position toPos, const std::shared_ptr<Piece>& piece);
-
-    void LoadFEN(const std::string& fen);
-    bool IsTarget(const Position& pos, Color color);
-
-    std::shared_ptr<Square> GetEnPassantSquare() const;
-    std::string GetFEN() const;
-
-    std::vector<std::vector<std::shared_ptr<Square>>> GetBoard() const;
-
-    void UpdateCheckStatus();
-
-    bool IsChecked(){return _isWhiteChecked || _isBlackChecked;}
-
+    bitboard generateWhitePawnMoves();
 
 private:
-    std::shared_ptr<Piece> _getPieceFromFEN(char fenChar);
+    int halfMoveClock;
+    int fullMoveCounter;
 
-    Move _lastMove;
+    bool whiteToMove;
+    bool whiteCastleKingside;
+    bool whiteCastleQueenside;
+    bool blackCastleKingside;
+    bool blackCastleQueenside;
+    int enPassantSquare;
 
-    Color _turnColor;
-    Color _playerColor;
+    bitboard white_pawns;
+    bitboard white_knights;
+    bitboard white_bishops;
+    bitboard white_rooks;
+    bitboard white_queens;
+    bitboard white_king;
 
-    int _halfMoveClock;
-    int _fullMoveNumber;
+    bitboard black_pawns;
+    bitboard black_knights;
+    bitboard black_bishops;
+    bitboard black_rooks;
+    bitboard black_queens;
+    bitboard black_king;
 
-    bool _canWhiteCastleKingside;
-    bool _canWhiteCastleQueenside;
+    bitboard white_pieces;
+    bitboard black_pieces;
 
-    bool _canBlackCastleKingside;
-    bool _canBlackCastleQueenside;
-
-    bool _isWhiteChecked;
-    bool _isBlackChecked;
-
-    std::shared_ptr<Square> _whiteKingSquare;
-    std::shared_ptr<Square> _blackKingSquare;
-
-    std::shared_ptr<Square> _selectedSquare;
-    std::shared_ptr<Square> _enPassantSquare;
-
-    std::vector<std::vector<std::shared_ptr<Square>>> _board;
+    bitboard all_pieces;
+    bitboard empty_squares;
 };
