@@ -7,6 +7,6 @@ class Knight : public Piece
 public:
     Knight(Color color);
 
-    std::vector<std::shared_ptr<Square>> GetMoves(Position pos, Board& board) const override;
+    std::vector<Position> GetMoves(Position pos, Board& board) const override;
     char GetFEN() const override;
 };

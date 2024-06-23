@@ -1,6 +1,5 @@
 #include "Board/Board.h"
 
-
 Board::Board(Color playerColor, std::string fen) : _playerColor(playerColor)
 {
     bool isWhite = false;
@@ -15,11 +14,6 @@ Board::Board(Color playerColor, std::string fen) : _playerColor(playerColor)
     }
 
     LoadFEN(fen);
-}
-
-const Move &Board::GetLastMove() const
-{
-    return _lastMove;
 }
 
 std::string Board::GetFEN() const
@@ -80,11 +74,17 @@ std::string Board::GetFEN() const
 
     fen += " ";
     fen += _enPassantSquare ? _enPassantSquare->GetPosition().ToString() : "-";
+    // fen += "-";
     fen += " ";
     fen += std::to_string(_halfMoveClock);
     fen += " ";
     fen += std::to_string(_fullMoveNumber);
     return fen;
+}
+
+std::vector<std::vector<std::shared_ptr<Square>>> Board::GetBoard() const
+{
+    return this->_board;
 }
 
 std::shared_ptr<Piece> Board::_getPieceFromFEN(char fenChar)
@@ -113,7 +113,6 @@ std::shared_ptr<Piece> Board::_getPieceFromFEN(char fenChar)
 
 void Board::LoadFEN(const std::string &fen)
 {
-
     // Clear board
     for (int i = 0; i < 8; i++)
     {
@@ -208,42 +207,23 @@ void Board::LoadFEN(const std::string &fen)
     UpdateCheckStatus();
 }
 
-Color Board::GetPlayerColor() const
+void Board::MakeMove(Position from, Position to)
 {
-    return _playerColor;
+    MakeMove(_board[from.x][from.y], _board[to.x][to.y]);
 }
 
-Color Board::GetTurnColor() const
-{
-    return _turnColor;
-}
-
-void Board::SetPlayerColor(Color color)
-{
-    _playerColor = color;
-}
-
-void Board::MovePiece(std::string from, std::string to)
+void Board::MakeMove(std::string from, std::string to)
 {
     Position fromPosition(from);
     Position toPosition(to);
 
-    MovePiece(_board[fromPosition.x][fromPosition.y], _board[toPosition.x][toPosition.y]);
+    MakeMove(_board[fromPosition.x][fromPosition.y], _board[toPosition.x][toPosition.y]);
 }
 
-void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
+void Board::MakeMove(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare)
 {
     std::shared_ptr<Piece> piece = fromSquare->GetPiece();
     Color color = piece->GetColor();
-
-    if (toSquare->GetPiece())
-    {
-        AudioManager::Instance().PlaySound("capture");
-    }
-    else
-    {
-        AudioManager::Instance().PlaySound("move-self");
-    }
 
     // Update castling availability
     if (piece->GetType() == Type::King)
@@ -333,22 +313,26 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
         rookToSquare->SetPiece(rookFromSquare->GetPiece());
         rookToSquare->GetPiece()->Move();
         rookFromSquare->SetPiece(nullptr);
-
-        AudioManager::Instance().PlaySound("castle");
-    }
-
-    if (_enPassantSquare && toSquare->GetPosition() == _enPassantSquare->GetPosition())
-    {
-        std::shared_ptr<Square> pawnSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? -1 : 1));
-        pawnSquare->SetPiece(nullptr);
     }
 
     _enPassantSquare = nullptr;
 
     // Handle en passant move
-    if (piece->GetType() == Type::Pawn && std::abs(toSquare->GetPosition().y - fromSquare->GetPosition().y) == 2)
+    if (piece->GetType() == Type::Pawn)
     {
-        _enPassantSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? -1 : 1));
+        if (_enPassantSquare && toSquare->GetPosition() == _enPassantSquare->GetPosition())
+        {
+            // Find the square of the captured pawn
+            std::shared_ptr<Square> pawnSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? -1 : 1));
+            if (pawnSquare && pawnSquare->GetPiece() && pawnSquare->GetPiece()->GetType() == Type::Pawn)
+            {
+                pawnSquare->SetPiece(nullptr);
+            }
+        }
+        if (std::abs(toSquare->GetPosition().y - fromSquare->GetPosition().y) == 2)
+        {
+            _enPassantSquare = GetSquare(toSquare->GetPosition().x, toSquare->GetPosition().y + (piece->GetColor() == Color::White ? -1 : 1));
+        }
     }
 
     if (_turnColor == Color::White)
@@ -364,6 +348,14 @@ void Board::MovePiece(const std::shared_ptr<Square> &fromSquare, const std::shar
     UpdateCheckStatus();
 }
 
+void Board::UndoMove()
+{
+    std::shared_ptr<Square> fromSquare = GetSquare(_lastMove._to);
+    std::shared_ptr<Square> toSquare = GetSquare(_lastMove._from);
+
+    fromSquare->SetPiece(_lastMove._piece);
+}
+
 std::shared_ptr<Square> Board::GetEnPassantSquare() const
 {
     return _enPassantSquare;
@@ -371,7 +363,7 @@ std::shared_ptr<Square> Board::GetEnPassantSquare() const
 
 bool Board::IsTarget(const Position &pos, Color color)
 {
-    std::vector<std::shared_ptr<Square>> moves;
+    std::vector<Position> moves;
     for (auto row : this->_board)
     {
         for (auto square : row)
@@ -395,7 +387,7 @@ bool Board::IsTarget(const Position &pos, Color color)
                 }
                 for (auto move : moves)
                 {
-                    if (move->GetPosition() == pos)
+                    if (move == pos)
                     {
                         return true;
                     }
@@ -406,24 +398,9 @@ bool Board::IsTarget(const Position &pos, Color color)
     return false;
 }
 
-bool Board::IsValidCoordinate(int x, int y) const
+void Board::FilterMoves(std::vector<Position> &moves, Position square, Color color)
 {
-    return x >= 0 && x < 8 && y >= 0 && y < 8;
-}
-
-bool Board::IsValidCoordinate(const Position &pos) const
-{
-    return IsValidCoordinate(pos.x, pos.y);
-}
-
-// The FilterMoves function is used to filter out invalid moves from a list of potential moves for a chess piece.
-// It takes a list of potential moves, a square from which a piece is moving, and the color of the piece.
-// It simulates each potential move and checks if the move would put the king in check.
-// If a move would result in the king being in check, it is removed from the list of potential moves.
-// The function modifies the original list of moves to only include valid moves.
-void Board::FilterMoves(std::vector<std::shared_ptr<Square>> &moves, const std::shared_ptr<Square> &square, Color color)
-{
-    auto piece = square->GetPiece();
+    auto piece = GetSquare(square)->GetPiece();
     std::shared_ptr<Square> kingSquare;
     if (color == Color::White)
     {
@@ -436,7 +413,7 @@ void Board::FilterMoves(std::vector<std::shared_ptr<Square>> &moves, const std::
     for (auto it = moves.begin(); it != moves.end();)
     {
         auto move = *it;
-        auto piece = move->GetPiece();
+        auto piece = GetSquare(move)->GetPiece();
         VirtualMove(square, move, nullptr);
         if (IsTarget(kingSquare->GetPosition(), color))
         {
@@ -456,8 +433,11 @@ void Board::UpdateCheckStatus()
     _isBlackChecked = IsTarget(_blackKingSquare->GetPosition(), Color::Black);
 }
 
-void Board::VirtualMove(const std::shared_ptr<Square> &fromSquare, const std::shared_ptr<Square> &toSquare, const std::shared_ptr<Piece> &piece)
+void Board::VirtualMove(Position fromPos, Position toPos, const std::shared_ptr<Piece> &piece)
 {
+    auto fromSquare = GetSquare(fromPos);
+    auto toSquare = GetSquare(toPos);
+    
     auto _piece = fromSquare->GetPiece();
     toSquare->SetPiece(_piece);
     fromSquare->SetPiece(piece);
@@ -465,11 +445,7 @@ void Board::VirtualMove(const std::shared_ptr<Square> &fromSquare, const std::sh
 
 std::shared_ptr<Square> Board::GetSquare(int x, int y)
 {
-    if (x < 0 || x > 7 || y < 0 || y > 7)
-    {
-        return nullptr;
-    }
-    return this->_board[x][y];
+    return IsValidCoordinate(x, y) ? this->_board[x][y]: nullptr;
 }
 
 std::shared_ptr<Square> Board::GetSquare(const Position &pos)

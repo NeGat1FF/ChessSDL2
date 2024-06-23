@@ -2,14 +2,14 @@
 
 #include "Board/Board.h"
 
-King::King(Color color) : Piece(Type::King, color) {}
+King::King(Color color) : Piece(Type::King, color, 10000) {}
 
-std::vector<std::shared_ptr<Square>> King::GetMoves(Position pos, Board &board) const
+std::vector<Position> King::GetMoves(Position pos, Board &board) const
 {
-    std::vector<std::shared_ptr<Square>> moves = GetMovesWithoutChecks(pos, board);
+    std::vector<Position> moves = GetMovesWithoutChecks(pos, board);
 
-    moves.erase(std::remove_if(moves.begin(), moves.end(), [&](const std::shared_ptr<Square>& sq) {
-        return board.IsTarget(sq->GetPosition(), GetColor());
+    moves.erase(std::remove_if(moves.begin(), moves.end(), [&](const Position& position) {
+        return board.IsTarget(position, GetColor());
     }), moves.end());
 
     // Add castling moves if the king hasn't moved 
@@ -21,7 +21,7 @@ std::vector<std::shared_ptr<Square>> King::GetMoves(Position pos, Board &board) 
         {
             if (!board.GetSquare(pos.x + 1, pos.y)->GetPiece() && !board.GetSquare(pos.x + 2, pos.y)->GetPiece() && !board.IsTarget(Position(pos.x + 1, pos.y), GetColor()) && !board.IsTarget(Position(pos.x + 2, pos.y), GetColor()))
             {
-                moves.push_back(board.GetSquare(pos.x + 2, pos.y));
+                moves.push_back({pos.x + 2, pos.y});
             }
         }
         // Queen-side castling
@@ -30,7 +30,7 @@ std::vector<std::shared_ptr<Square>> King::GetMoves(Position pos, Board &board) 
         {
             if (!board.GetSquare(pos.x - 1, pos.y)->GetPiece() && !board.GetSquare(pos.x - 2, pos.y)->GetPiece() && !board.GetSquare(pos.x - 3, pos.y)->GetPiece() && !board.IsTarget(Position(pos.x - 1, pos.y), GetColor()) && !board.IsTarget(Position(pos.x - 2, pos.y), GetColor()))
             {
-                moves.push_back(board.GetSquare(pos.x - 2, pos.y));
+                moves.push_back({pos.x - 2, pos.y});
             }
         }
     }
@@ -38,9 +38,9 @@ std::vector<std::shared_ptr<Square>> King::GetMoves(Position pos, Board &board) 
     return moves;
 }
 
-std::vector<std::shared_ptr<Square>> King::GetMovesWithoutChecks(Position pos, Board &board) const
+std::vector<Position> King::GetMovesWithoutChecks(Position pos, Board &board) const
 {
-    std::vector<std::shared_ptr<Square>> moves;
+    std::vector<Position> moves;
     int dx[] = {-1, -1, -1, 0, 1, 1, 1, 0};
     int dy[] = {-1, 0, 1, 1, 1, 0, -1, -1};
 
@@ -48,19 +48,19 @@ std::vector<std::shared_ptr<Square>> King::GetMovesWithoutChecks(Position pos, B
     {
         Position newPos(pos.x + dx[i], pos.y + dy[i]);
 
-        if (newPos.x >= 0 && newPos.x < 8 && newPos.y >= 0 && newPos.y < 8)
+        if (IsValidCoordinate(newPos))
         {
-            auto nextSquare = board.GetSquare(newPos.x, newPos.y);
+            auto nextSquare = board.GetSquare(newPos);
             if (nextSquare->GetPiece())
             {
                 if (nextSquare->GetPiece()->GetColor() != GetColor())
                 {
-                    moves.push_back(nextSquare);
+                    moves.push_back(newPos);
                 }
             }
             else
             {
-                moves.push_back(nextSquare);
+                moves.push_back(newPos);
             }
         }
     }

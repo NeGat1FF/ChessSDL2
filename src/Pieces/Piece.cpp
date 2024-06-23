@@ -1,6 +1,7 @@
 #include "Pieces/Piece.h"
+#include <ostream>
 
-Piece::Piece(Type type, Color color) : _type(type), _color(color) {}
+Piece::Piece(Type type, Color color, int value) : _type(type), _color(color), _value(value) {}
 
 Type Piece::GetType() const
 {
@@ -62,4 +63,8 @@ bool Piece::HasMoved() const
 Color Piece::GetColor() const
 {
     return _color;
+}
+int Piece::GetValue() const
+{
+    return _value;
 }

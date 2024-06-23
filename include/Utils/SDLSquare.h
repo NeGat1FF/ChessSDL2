@@ -23,6 +23,13 @@ public:
 
     void Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Color BlackSquareColor, SDL_Color SelectedSquareColor);
 
+    std::shared_ptr<Square> GetSquare() const { return _square; }
+    std::shared_ptr<Piece> GetPiece() const { return _square->GetPiece(); }
+
+    void SetPiece(const std::shared_ptr<Piece>& piece) { _square->SetPiece(piece); }
+
+    Position GetPosition() const { return _square->GetPosition(); }
+
 private:
     int _x;
     int _y;

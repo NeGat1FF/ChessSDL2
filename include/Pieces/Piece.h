@@ -28,14 +28,15 @@ enum class Color
 class Piece
 {
 public:
-    Piece(Type type, Color color);
+    Piece(Type type, Color color, int value = 0);
 
     Type GetType() const;
     Color GetColor() const;
+    int GetValue() const;
 
     std::string ToString() const;
 
-    virtual std::vector<std::shared_ptr<Square>> GetMoves(Position pos, Board& board) const = 0;
+    virtual std::vector<Position> GetMoves(Position pos, Board& board) const = 0;
     virtual char GetFEN() const = 0;
 
     void Move();
@@ -45,5 +46,6 @@ private:
     bool _hasMoved = false;
     Type _type;
     Color _color;
+    int _value;
 };
 

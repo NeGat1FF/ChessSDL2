@@ -1,48 +1,60 @@
 #include "Utils/AIManager.h"
-#include <iostream>
+#include <stack>
 
-AIManager::AIManager(Board* board) : _board(board)
+std::vector<std::pair<Position, std::vector<Position>>> AIManager::GenerateLegalMoves(Board &board)
 {
-}
-
-void AIManager::MakeMove()
-{
-}
-
-std::vector<std::pair<std::shared_ptr<Square>, std::vector<std::shared_ptr<Square>>>> AIManager::GenerateLegalMoves(){
-    std::vector<std::pair<std::shared_ptr<Square>, std::vector<std::shared_ptr<Square>>>> moves;
-    for(int x = 0;x < 8;x++){
-        for(int y = 0;y < 8;y++){
-            if(_board->GetSquare(x,y)->GetPiece() != nullptr){
-                auto square = _board->GetSquare(x,y);
-                if(square->GetPiece()->GetColor() == _board->GetTurnColor()){
-                    std::vector<std::shared_ptr<Square>> possibleMoves = square->GetPiece()->GetMoves(Position(x,y),*_board);
-                    if(possibleMoves.size() > 0){
-                        moves.push_back(std::make_pair(square,possibleMoves));
+    std::vector<std::pair<Position, std::vector<Position>>> moves;
+    for (int x = 0; x < 8; x++)
+    {
+        for (int y = 0; y < 8; y++)
+        {
+            if (board.GetSquare(x, y)->GetPiece() != nullptr)
+            {
+                auto square = board.GetSquare(x, y);
+                if (square->GetPiece()->GetColor() == board.GetTurnColor())
+                {
+                    std::vector<Position> possibleMoves = square->GetPiece()->GetMoves(Position(x, y), board);
+                    board.FilterMoves(possibleMoves, {x, y}, square->GetPiece()->GetColor());
+                    if (possibleMoves.size() > 0)
+                    {
+                        moves.push_back(std::make_pair(Position{x, y}, possibleMoves));
                     }
                 }
             }
         }
     }
     return moves;
-
 }
 
-void AIManager::generatePositions(int depth, int &positions) {
-    if(depth == 0){
-        positions++;
-        return;
-    }
+void AIManager::generatePositions(int depth, int &positions, std::string fen)
+{
+    struct State {
+        int depth;
+        std::string fen;
+    };
 
-    std::string fen = _board->GetFEN();
+    std::stack<State> stack;
+    stack.push({depth, fen});
 
-    std::vector<std::pair<std::shared_ptr<Square>, std::vector<std::shared_ptr<Square>>>> moves = GenerateLegalMoves();
-    for(auto move : moves){
-        for(auto square : move.second){
-            _board->MovePiece(move.first,square);
-            std::cout << "Moved " << move.first->GetPosition().ToString() << " to " << square->GetPosition().ToString() << std::endl;
-            generatePositions(depth - 1,positions);
-            _board->LoadFEN(fen);
+    while (!stack.empty()) {
+        State current = stack.top();
+        stack.pop();
+
+        if (current.depth == 0) {
+            positions++;
+            continue;
+        }
+
+        Board board;
+        board.LoadFEN(current.fen);
+
+        auto moves = GenerateLegalMoves(board);
+        for (auto move : moves) {
+            for (auto square : move.second) {
+                board.MakeMove(move.first, square);
+                stack.push({current.depth - 1, board.GetFEN()});
+                board.LoadFEN(current.fen);
+            }
         }
     }
 }

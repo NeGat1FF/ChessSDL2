@@ -1,19 +1,15 @@
 #pragma once
 
-#include <string>
-#include <utility>
 #include "Board/Board.h"
 
 class AIManager
 {
 public:
-    AIManager(Board* board);
 
-    void MakeMove();
+    AIManager() = delete;
 
-    std::vector<std::pair<std::shared_ptr<Square>, std::vector<std::shared_ptr<Square>>>> GenerateLegalMoves();
+    static std::vector<std::pair<Position, std::vector<Position>>> GenerateLegalMoves(Board &board);
 
-    void generatePositions(int depth, int &positions);
-private:
-    Board* _board;
+    static void generatePositions(int depth, int& positions, std::string fen);
+
 };

@@ -5,11 +5,11 @@
 #include "Pieces/Bishop.h"
 #include "Pieces/Rook.h"
 
-Queen::Queen(Color color) : Piece(Type::Queen, color) {}
+Queen::Queen(Color color) : Piece(Type::Queen, color, 900) {}
 
-std::vector<std::shared_ptr<Square>> Queen::GetMoves(Position pos, Board &board) const
+std::vector<Position> Queen::GetMoves(Position pos, Board &board) const
 {
-    std::vector<std::shared_ptr<Square>> moves;
+    std::vector<Position> moves;
 
     auto bishopMoves = Bishop::GetBishopMoves(pos, board, GetColor());
     auto rookMoves = Rook::GetRookMoves(pos, board, GetColor());

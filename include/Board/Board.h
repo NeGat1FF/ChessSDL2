@@ -6,7 +6,6 @@
 #include <sstream>
 
 #include "Utils/Move.h"
-#include "Utils/AudioManager.h"
 #include "Square.h"
 
 // Piece headers
@@ -24,22 +23,25 @@ class Board
 public:
     Board(Color playerColor = Color::White, std::string fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    bool IsValidCoordinate(int x, int y) const;
-    bool IsValidCoordinate(const Position& pos) const;
-    void MovePiece(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
-    void MovePiece(std::string from, std::string to);
+    void MakeMove(Position from, Position to);
+    void MakeMove(std::string from, std::string to);
+    void MakeMove(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
+
+    void UndoMove();
+
     void SelectPiece(const std::shared_ptr<Square>& square);
 
-    Color GetPlayerColor() const;
-    Color GetTurnColor() const;
-    void SetPlayerColor(Color color);
+    inline Color GetPlayerColor() const { return _playerColor;}
+    inline Color GetTurnColor() const { return _turnColor;}
+    inline void SetPlayerColor(Color color) { _playerColor = color;}
 
-    std::shared_ptr<Square> GetSquare(int x, int y);
-    std::shared_ptr<Square> GetSquare(const Position& pos);
-    const Move& GetLastMove() const;
+    inline std::shared_ptr<Square> GetSquare(int x, int y);
+    inline std::shared_ptr<Square> GetSquare(const Position& pos);
 
-    void FilterMoves(std::vector<std::shared_ptr<Square>>& moves, const std::shared_ptr<Square>& square, Color color);
-    void VirtualMove(const std::shared_ptr<Square>& fromSquare,const std::shared_ptr<Square>& toSquare, const std::shared_ptr<Piece>& piece);
+    inline Move GetLastMove() const { return _lastMove;}
+
+    void FilterMoves(std::vector<Position>& moves, Position square, Color color);
+    void VirtualMove(Position fromPos,Position toPos, const std::shared_ptr<Piece>& piece);
 
     void LoadFEN(const std::string& fen);
     bool IsTarget(const Position& pos, Color color);
@@ -47,7 +49,11 @@ public:
     std::shared_ptr<Square> GetEnPassantSquare() const;
     std::string GetFEN() const;
 
+    std::vector<std::vector<std::shared_ptr<Square>>> GetBoard() const;
+
     void UpdateCheckStatus();
+
+    bool IsChecked(){return _isWhiteChecked || _isBlackChecked;}
 
 
 private:
@@ -60,8 +66,6 @@ private:
 
     int _halfMoveClock;
     int _fullMoveNumber;
-
-    unsigned int _size;
 
     bool _canWhiteCastleKingside;
     bool _canWhiteCastleQueenside;

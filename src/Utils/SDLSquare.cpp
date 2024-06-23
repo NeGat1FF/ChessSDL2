@@ -2,7 +2,7 @@
 
 #include "Utils/TextureManager.h"
 
-SDLSquare::SDLSquare(std::shared_ptr<Square> Square, int x, int y, unsigned int size, bool isWhite): _square(Square), _x(x), _y(y), _isWhite(isWhite)
+SDLSquare::SDLSquare(std::shared_ptr<Square> Square, int x, int y, unsigned int size, bool isWhite): _square(Square), _x(x), _y(y), _isWhite(isWhite), _isSelected(false)
 {
     Resize(size);
 }
@@ -26,6 +26,9 @@ void SDLSquare::Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Col
     {
         SDL_SetRenderDrawColor(renderer, SelectedSquareColor.r, SelectedSquareColor.g, SelectedSquareColor.b, SelectedSquareColor.a);
         SDL_RenderFillRect(renderer, &this->_rect);
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderDrawRect(renderer, &this->_rect);
     }
     else
     {
