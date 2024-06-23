@@ -21,7 +21,7 @@ public:
 
     void Resize(unsigned int size);
 
-    void Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Color BlackSquareColor, SDL_Color SelectedSquareColor);
+    void Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Color BlackSquareColor, SDL_Color SelectedSquareColor, bool isPlayerWhite);
 
     std::shared_ptr<Square> GetSquare() const { return _square; }
     std::shared_ptr<Piece> GetPiece() const { return _square->GetPiece(); }

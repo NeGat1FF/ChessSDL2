@@ -27,8 +27,6 @@ public:
     void MakeMove(std::string from, std::string to);
     void MakeMove(const std::shared_ptr<Square>& fromSquare, const std::shared_ptr<Square>& toSquare);
 
-    void UndoMove();
-
     void SelectPiece(const std::shared_ptr<Square>& square);
 
     inline Color GetPlayerColor() const { return _playerColor;}
@@ -46,7 +44,7 @@ public:
     void LoadFEN(const std::string& fen);
     bool IsTarget(const Position& pos, Color color);
 
-    std::shared_ptr<Square> GetEnPassantSquare() const;
+    inline std::shared_ptr<Square> GetEnPassantSquare() const { return _enPassantSquare;}
     std::string GetFEN() const;
 
     std::vector<std::vector<std::shared_ptr<Square>>> GetBoard() const;

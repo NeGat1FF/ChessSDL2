@@ -20,7 +20,7 @@ void SDLSquare::Resize(unsigned int size)
     _rect.y = (7 - _square->GetY()) * size;
 }
 
-void SDLSquare::Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Color BlackSquareColor, SDL_Color SelectedSquareColor)
+void SDLSquare::Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Color BlackSquareColor, SDL_Color SelectedSquareColor, bool isPlayerWhite)
 {
     if (this->_isSelected)
     {
@@ -46,6 +46,11 @@ void SDLSquare::Draw(SDL_Renderer* renderer, SDL_Color WhiteSquareColor, SDL_Col
 
     if (this->_square->GetPiece())
     {
-        TextureManager::Instance().Draw(this->_square->GetPiece()->ToString(), &this->_rect, renderer);
+        if(isPlayerWhite){
+            TextureManager::Instance().Draw(this->_square->GetPiece()->ToString(), &this->_rect, renderer);
+        }
+        else{
+            TextureManager::Instance().Draw(this->_square->GetPiece()->ToString(), &this->_rect, renderer, static_cast<SDL_RendererFlip>(SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL));
+        }
     }
 }

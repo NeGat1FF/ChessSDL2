@@ -199,6 +199,10 @@ void Board::LoadFEN(const std::string &fen)
         Position position(fenComponents[3]);
         _enPassantSquare = GetSquare(position.x, position.y);
     }
+    else
+    {
+        _enPassantSquare = nullptr;
+    }
 
     _halfMoveClock = std::stoi(fenComponents[4]);
 
@@ -346,19 +350,6 @@ void Board::MakeMove(const std::shared_ptr<Square> &fromSquare, const std::share
     }
 
     UpdateCheckStatus();
-}
-
-void Board::UndoMove()
-{
-    std::shared_ptr<Square> fromSquare = GetSquare(_lastMove._to);
-    std::shared_ptr<Square> toSquare = GetSquare(_lastMove._from);
-
-    fromSquare->SetPiece(_lastMove._piece);
-}
-
-std::shared_ptr<Square> Board::GetEnPassantSquare() const
-{
-    return _enPassantSquare;
 }
 
 bool Board::IsTarget(const Position &pos, Color color)

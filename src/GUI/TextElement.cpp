@@ -82,7 +82,6 @@ void TextElement::_updateTextRect()
     SDL_Surface *textSurface = TTF_RenderText_Blended(_font, _text.c_str(), {255, 255, 255, 255});
 
     if(textSurface == nullptr){
-        std::cout << "Error: " << TTF_GetError() << std::endl;
         return;
     }
 
