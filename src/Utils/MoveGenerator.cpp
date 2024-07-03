@@ -1,5 +1,4 @@
 #include "Utils/MoveGenerator.h"
-#include "MoveGenerator.h"
 
 bitboard MoveGenerator::generateAllWhitePawnSinglePushes(bitboard white_pawns, bitboard empty_squares)
 {

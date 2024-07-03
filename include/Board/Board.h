@@ -13,10 +13,23 @@ public:
 
     void LoadFen(const std::string &fen);
 
-    void setBit(bitboard &bb, int square);
-    void clearBit(bitboard &bb, int square);
+    static void setBit(bitboard &bb, int square);
+    static void clearBit(bitboard &bb, int square);
+    static bool getBit(bitboard bb, int square);
 
-    bitboard generateWhitePawnMoves();
+    inline bitboard GetWhitePawns() const { return white_pawns; }
+    inline bitboard GetWhiteKnights() const { return white_knights; }
+    inline bitboard GetWhiteBishops() const { return white_bishops; }
+    inline bitboard GetWhiteRooks() const { return white_rooks; }
+    inline bitboard GetWhiteQueens() const { return white_queens; }
+    inline bitboard GetWhiteKing() const { return white_king; }
+
+    inline bitboard GetBlackPawns() const { return black_pawns; }
+    inline bitboard GetBlackKnights() const { return black_knights; }
+    inline bitboard GetBlackBishops() const { return black_bishops; }
+    inline bitboard GetBlackRooks() const { return black_rooks; }
+    inline bitboard GetBlackQueens() const { return black_queens; }
+    inline bitboard GetBlackKing() const { return black_king; }
 
 private:
     int halfMoveClock;

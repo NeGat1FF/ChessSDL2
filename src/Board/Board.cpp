@@ -129,7 +129,8 @@ void Board::clearBit(bitboard &bb, int square)
 {
     bb &= ~(1ULL << square);
 }
-bitboard Board::generateWhitePawnMoves()
+
+bool Board::getBit(bitboard bb, int square)
 {
-    return (white_pawns << 8) & empty_squares;
+    return bb & (1ULL << square);
 }
